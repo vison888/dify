@@ -483,7 +483,7 @@ class WorkflowAppGenerator(BaseAppGenerator):
             try:
                 runner.run()
             except GenerateTaskStoppedError as e:
-                logger.warning("Task stopped: %s", str(e))
+                logger.warning(f"Task stopped: {str(e)}")
                 pass
             except InvokeAuthorizationError:
                 queue_manager.publish_error(
@@ -540,6 +540,6 @@ class WorkflowAppGenerator(BaseAppGenerator):
                 raise GenerateTaskStoppedError()
             else:
                 logger.exception(
-                    "Fails to process generate task pipeline, task_id: %s", application_generate_entity.task_id
+                    f"Fails to process generate task pipeline, task_id: {application_generate_entity.task_id}"
                 )
                 raise e

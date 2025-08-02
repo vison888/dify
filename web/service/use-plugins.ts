@@ -519,6 +519,7 @@ export const usePluginTaskList = (category?: PluginType) => {
           refreshPluginList(category ? { category } as any : undefined, !category)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isRefetching])
 
   const handleRefetch = useCallback(() => {

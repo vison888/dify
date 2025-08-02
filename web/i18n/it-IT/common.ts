@@ -249,7 +249,6 @@ const translation = {
       content4: 'Ti abbiamo appena inviato un codice di verifica temporaneo a <email>{{email}}</email>.',
       content1: 'Se continui, invieremo un codice di verifica a <email>{{email}}</email> per la riautenticazione.',
       sendVerifyCode: 'Invia codice di verifica',
-      unAvailableEmail: 'Questa email è temporaneamente non disponibile.',
     },
   },
   members: {

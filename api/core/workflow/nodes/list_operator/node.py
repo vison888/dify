@@ -184,10 +184,11 @@ class ListOperatorNode(BaseNode):
         value = int(self.graph_runtime_state.variable_pool.convert_template(self._node_data.extract_by.serial).text)
         if value < 1:
             raise ValueError(f"Invalid serial index: must be >= 1, got {value}")
-        if value > len(variable.value):
-            raise InvalidKeyError(f"Invalid serial index: must be <= {len(variable.value)}, got {value}")
         value -= 1
-        result = variable.value[value]
+        if len(variable.value) > int(value):
+            result = variable.value[value]
+        else:
+            result = ""
         return variable.model_copy(update={"value": [result]})
 
 
@@ -299,7 +300,7 @@ def _endswith(value: str) -> Callable[[str], bool]:
 
 
 def _is(value: str) -> Callable[[str], bool]:
-    return lambda x: x == value
+    return lambda x: x is value
 
 
 def _in(value: str | Sequence[str]) -> Callable[[str], bool]:

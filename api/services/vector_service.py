@@ -36,7 +36,7 @@ class VectorService:
                 # get the process rule
                 processing_rule = (
                     db.session.query(DatasetProcessRule)
-                    .where(DatasetProcessRule.id == dataset_document.dataset_process_rule_id)
+                    .filter(DatasetProcessRule.id == dataset_document.dataset_process_rule_id)
                     .first()
                 )
                 if not processing_rule:

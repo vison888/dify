@@ -17,7 +17,6 @@ const translation = {
       bulkImport: 'Množični uvoz',
       bulkExport: 'Množični izvoz',
       clearAll: 'Počisti vse opombe',
-      clearAllConfirm: 'Izbrišite vse opombe?',
     },
   },
   editModal: {

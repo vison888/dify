@@ -82,7 +82,6 @@ import { supportFunctionCall } from '@/utils/tool-call'
 import { MittProvider } from '@/context/mitt-context'
 import { fetchAndMergeValidCompletionParams } from '@/utils/completion-params'
 import Toast from '@/app/components/base/toast'
-import { useAppContext } from '@/context/app-context'
 
 type PublishConfig = {
   modelConfig: ModelConfig
@@ -92,8 +91,6 @@ type PublishConfig = {
 const Configuration: FC = () => {
   const { t } = useTranslation()
   const { notify } = useContext(ToastContext)
-  const { isLoadingCurrentWorkspace, currentWorkspace } = useAppContext()
-
   const { appDetail, showAppConfigureFeaturesModal, setAppSiderbarExpand, setShowAppConfigureFeaturesModal } = useAppStore(useShallow(state => ({
     appDetail: state.appDetail,
     setAppSiderbarExpand: state.setAppSiderbarExpand,
@@ -696,6 +693,7 @@ const Configuration: FC = () => {
         setHasFetchedDetail(true)
       })
     })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appId])
 
   const promptEmpty = (() => {
@@ -845,7 +843,7 @@ const Configuration: FC = () => {
     setAppSiderbarExpand('collapse')
   }
 
-  if (isLoading || isLoadingCurrentWorkspace || !currentWorkspace.id) {
+  if (isLoading) {
     return <div className='flex h-full items-center justify-center'>
       <Loading type='area' />
     </div>

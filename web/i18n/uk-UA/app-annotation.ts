@@ -17,7 +17,6 @@ const translation = {
       bulkImport: 'Масовий імпорт',
       bulkExport: 'Масовий експорт',
       clearAll: 'Очистити всі анотації',
-      clearAllConfirm: 'Видалити всі анотації?',
     },
   },
   editModal: {

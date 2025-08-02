@@ -30,7 +30,7 @@ export const checkHasQueryBlock = (text: string) => {
 * {{#1711617514996.sys.query#}} => [sys, query]
 */
 export const getInputVars = (text: string): ValueSelector[] => {
-  if (!text || typeof text !== 'string')
+  if (!text)
     return []
 
   const allVars = text.match(/{{#([^#]*)#}}/g)

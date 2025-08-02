@@ -1,11 +1,9 @@
 'use client'
 import type { FC } from 'react'
 import React, { Fragment, useEffect, useState } from 'react'
-import ClearAllAnnotationsConfirmModal from '../clear-all-annotations-confirm-modal'
 import { useTranslation } from 'react-i18next'
 import {
   RiAddLine,
-  RiDeleteBinLine,
   RiMoreFill,
 } from '@remixicon/react'
 import { useContext } from 'use-context-selector'
@@ -24,8 +22,7 @@ import { ChevronRight } from '@/app/components/base/icons/src/vender/line/arrows
 
 import I18n from '@/context/i18n'
 import { fetchExportAnnotationList } from '@/service/annotation'
-import { clearAllAnnotations } from '@/service/annotation'
-import { LanguagesSupported } from '@/i18n-config/language'
+import { LanguagesSupported } from '@/i18n/language'
 
 const CSV_HEADER_QA_EN = ['Question', 'Answer']
 const CSV_HEADER_QA_CN = ['问题', '答案']
@@ -79,21 +76,7 @@ const HeaderOptions: FC<Props> = ({
   }, [controlUpdateList])
 
   const [showBulkImportModal, setShowBulkImportModal] = useState(false)
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
-  const handleClearAll = () => {
-    setShowClearConfirm(true)
-  }
-  const handleConfirmed = async () => {
-    try {
-      await clearAllAnnotations(appId)
-      onAdded()
-    }
-    catch (_) {
-    }
-    finally {
-      setShowClearConfirm(false)
-    }
-  }
+
   const Operations = () => {
     return (
       <div className="w-full py-1">
@@ -142,15 +125,6 @@ const HeaderOptions: FC<Props> = ({
             </MenuItems>
           </Transition>
         </Menu>
-        <button
-          onClick={handleClearAll}
-          className='mx-1 flex h-9 w-[calc(100%_-_8px)] cursor-pointer items-center space-x-2 rounded-lg px-3 py-2 text-red-600 hover:bg-red-50 disabled:opacity-50'
-        >
-          <RiDeleteBinLine className='h-4 w-4' />
-          <span className='system-sm-regular grow text-left'>
-            {t('appAnnotation.table.header.clearAll')}
-          </span>
-        </button>
       </div>
     )
   }
@@ -168,9 +142,11 @@ const HeaderOptions: FC<Props> = ({
         position="br"
         trigger="click"
         btnElement={
-          <RiMoreFill className='h-4 w-4' />
+          <Button variant='secondary' className='w-8 p-0'>
+            <RiMoreFill className='h-4 w-4' />
+          </Button>
         }
-        btnClassName='btn btn-secondary btn-medium w-8 p-0'
+        btnClassName='p-0 border-0'
         className={'!z-20 h-fit !w-[155px]'}
         popupClassName='!w-full !overflow-visible'
         manualClose
@@ -190,15 +166,6 @@ const HeaderOptions: FC<Props> = ({
             isShow={showBulkImportModal}
             onCancel={() => setShowBulkImportModal(false)}
             onAdded={onAdded}
-          />
-        )
-      }
-      {
-        showClearConfirm && (
-          <ClearAllAnnotationsConfirmModal
-            isShow={showClearConfirm}
-            onHide={() => setShowClearConfirm(false)}
-            onConfirm={handleConfirmed}
           />
         )
       }

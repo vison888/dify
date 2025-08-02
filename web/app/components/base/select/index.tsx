@@ -77,6 +77,7 @@ const Select: FC<ISelectProps> = ({
       defaultSelect = existed
 
     setSelectedItem(defaultSelect)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultValue])
 
   const filteredItems: Item[]
@@ -200,6 +201,7 @@ const SimpleSelect: FC<ISelectProps> = ({
       defaultSelect = existed
 
     setSelectedItem(defaultSelect)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaultValue])
 
   const listboxRef = useRef<HTMLDivElement>(null)
@@ -342,7 +344,7 @@ const PortalSelect: FC<PortalSelectProps> = ({
             >
               <span
                 className={`
-              grow truncate text-text-secondary
+              grow truncate
               ${!selectedItem?.name && 'text-components-input-text-placeholder'}
             `}
               >

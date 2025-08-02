@@ -17,7 +17,6 @@ const translation = {
       bulkImport: 'Importation en Vrac',
       bulkExport: 'Exportation en Vrac',
       clearAll: 'Effacer toutes les annotations',
-      clearAllConfirm: 'Supprimer toutes les annotations ?',
     },
   },
   editModal: {

@@ -75,7 +75,7 @@ class BillingService:
 
         join: Optional[TenantAccountJoin] = (
             db.session.query(TenantAccountJoin)
-            .where(TenantAccountJoin.tenant_id == tenant_id, TenantAccountJoin.account_id == current_user.id)
+            .filter(TenantAccountJoin.tenant_id == tenant_id, TenantAccountJoin.account_id == current_user.id)
             .first()
         )
 

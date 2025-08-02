@@ -17,7 +17,6 @@ const translation = {
       bulkImport: 'Nhập hàng loạt',
       bulkExport: 'Xuất hàng loạt',
       clearAll: 'Xóa tất cả chú thích',
-      clearAllConfirm: 'Xóa tất cả các chú thích?',
     },
   },
   editModal: {

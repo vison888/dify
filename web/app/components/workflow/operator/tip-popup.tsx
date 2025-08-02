@@ -14,7 +14,6 @@ const TipPopup = ({
 }: TipPopupProps) => {
   return (
     <Tooltip
-      needsDelay={false}
       offset={4}
       popupClassName='p-0 bg-transparent'
       popupContent={

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 import sqlalchemy as sa
 from flask import request
 from flask_login import UserMixin
-from sqlalchemy import Float, Index, PrimaryKeyConstraint, String, func, text
+from sqlalchemy import Float, Index, PrimaryKeyConstraint, func, text
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
 from configs import dify_config
@@ -32,12 +32,15 @@ from .engine import db
 from .enums import CreatorUserRole
 from .types import StringUUID
 
+if TYPE_CHECKING:
+    from .workflow import Workflow
+
 
 class DifySetup(Base):
     __tablename__ = "dify_setups"
     __table_args__ = (db.PrimaryKeyConstraint("version", name="dify_setup_pkey"),)
 
-    version: Mapped[str] = mapped_column(String(255), nullable=False)
+    version = mapped_column(db.String(255), nullable=False)
     setup_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
@@ -73,15 +76,15 @@ class App(Base):
 
     id: Mapped[str] = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     tenant_id: Mapped[str] = mapped_column(StringUUID)
-    name: Mapped[str] = mapped_column(String(255))
+    name: Mapped[str] = mapped_column(db.String(255))
     description: Mapped[str] = mapped_column(db.Text, server_default=db.text("''::character varying"))
-    mode: Mapped[str] = mapped_column(String(255))
-    icon_type: Mapped[Optional[str]] = mapped_column(String(255))  # image, emoji
-    icon = db.Column(String(255))
-    icon_background: Mapped[Optional[str]] = mapped_column(String(255))
+    mode: Mapped[str] = mapped_column(db.String(255))
+    icon_type: Mapped[Optional[str]] = mapped_column(db.String(255))  # image, emoji
+    icon = db.Column(db.String(255))
+    icon_background: Mapped[Optional[str]] = mapped_column(db.String(255))
     app_model_config_id = mapped_column(StringUUID, nullable=True)
     workflow_id = mapped_column(StringUUID, nullable=True)
-    status: Mapped[str] = mapped_column(String(255), server_default=db.text("'normal'::character varying"))
+    status: Mapped[str] = mapped_column(db.String(255), server_default=db.text("'normal'::character varying"))
     enable_site: Mapped[bool] = mapped_column(db.Boolean)
     enable_api: Mapped[bool] = mapped_column(db.Boolean)
     api_rpm: Mapped[int] = mapped_column(db.Integer, server_default=db.text("0"))
@@ -110,13 +113,13 @@ class App(Base):
 
     @property
     def site(self):
-        site = db.session.query(Site).where(Site.app_id == self.id).first()
+        site = db.session.query(Site).filter(Site.app_id == self.id).first()
         return site
 
     @property
     def app_model_config(self):
         if self.app_model_config_id:
-            return db.session.query(AppModelConfig).where(AppModelConfig.id == self.app_model_config_id).first()
+            return db.session.query(AppModelConfig).filter(AppModelConfig.id == self.app_model_config_id).first()
 
         return None
 
@@ -125,7 +128,7 @@ class App(Base):
         if self.workflow_id:
             from .workflow import Workflow
 
-            return db.session.query(Workflow).where(Workflow.id == self.workflow_id).first()
+            return db.session.query(Workflow).filter(Workflow.id == self.workflow_id).first()
 
         return None
 
@@ -135,7 +138,7 @@ class App(Base):
 
     @property
     def tenant(self):
-        tenant = db.session.query(Tenant).where(Tenant.id == self.tenant_id).first()
+        tenant = db.session.query(Tenant).filter(Tenant.id == self.tenant_id).first()
         return tenant
 
     @property
@@ -279,7 +282,7 @@ class App(Base):
         tags = (
             db.session.query(Tag)
             .join(TagBinding, Tag.id == TagBinding.tag_id)
-            .where(
+            .filter(
                 TagBinding.target_id == self.id,
                 TagBinding.tenant_id == self.tenant_id,
                 Tag.tenant_id == self.tenant_id,
@@ -293,7 +296,7 @@ class App(Base):
     @property
     def author_name(self):
         if self.created_by:
-            account = db.session.query(Account).where(Account.id == self.created_by).first()
+            account = db.session.query(Account).filter(Account.id == self.created_by).first()
             if account:
                 return account.name
 
@@ -306,8 +309,8 @@ class AppModelConfig(Base):
 
     id = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     app_id = mapped_column(StringUUID, nullable=False)
-    provider = mapped_column(String(255), nullable=True)
-    model_id = mapped_column(String(255), nullable=True)
+    provider = mapped_column(db.String(255), nullable=True)
+    model_id = mapped_column(db.String(255), nullable=True)
     configs = mapped_column(db.JSON, nullable=True)
     created_by = mapped_column(StringUUID, nullable=True)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
@@ -321,12 +324,12 @@ class AppModelConfig(Base):
     more_like_this = mapped_column(db.Text)
     model = mapped_column(db.Text)
     user_input_form = mapped_column(db.Text)
-    dataset_query_variable = mapped_column(String(255))
+    dataset_query_variable = mapped_column(db.String(255))
     pre_prompt = mapped_column(db.Text)
     agent_mode = mapped_column(db.Text)
     sensitive_word_avoidance = mapped_column(db.Text)
     retriever_resource = mapped_column(db.Text)
-    prompt_type = mapped_column(String(255), nullable=False, server_default=db.text("'simple'::character varying"))
+    prompt_type = mapped_column(db.String(255), nullable=False, server_default=db.text("'simple'::character varying"))
     chat_prompt_config = mapped_column(db.Text)
     completion_prompt_config = mapped_column(db.Text)
     dataset_configs = mapped_column(db.Text)
@@ -335,7 +338,7 @@ class AppModelConfig(Base):
 
     @property
     def app(self):
-        app = db.session.query(App).where(App.id == self.app_id).first()
+        app = db.session.query(App).filter(App.id == self.app_id).first()
         return app
 
     @property
@@ -369,7 +372,7 @@ class AppModelConfig(Base):
     @property
     def annotation_reply_dict(self) -> dict:
         annotation_setting = (
-            db.session.query(AppAnnotationSetting).where(AppAnnotationSetting.app_id == self.app_id).first()
+            db.session.query(AppAnnotationSetting).filter(AppAnnotationSetting.app_id == self.app_id).first()
         )
         if annotation_setting:
             collection_binding_detail = annotation_setting.collection_binding_detail
@@ -561,20 +564,20 @@ class RecommendedApp(Base):
     id = mapped_column(StringUUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
     app_id = mapped_column(StringUUID, nullable=False)
     description = mapped_column(db.JSON, nullable=False)
-    copyright: Mapped[str] = mapped_column(String(255), nullable=False)
-    privacy_policy: Mapped[str] = mapped_column(String(255), nullable=False)
+    copyright = mapped_column(db.String(255), nullable=False)
+    privacy_policy = mapped_column(db.String(255), nullable=False)
     custom_disclaimer: Mapped[str] = mapped_column(sa.TEXT, default="")
-    category: Mapped[str] = mapped_column(String(255), nullable=False)
-    position: Mapped[int] = mapped_column(db.Integer, nullable=False, default=0)
-    is_listed: Mapped[bool] = mapped_column(db.Boolean, nullable=False, default=True)
-    install_count: Mapped[int] = mapped_column(db.Integer, nullable=False, default=0)
-    language = mapped_column(String(255), nullable=False, server_default=db.text("'en-US'::character varying"))
+    category = mapped_column(db.String(255), nullable=False)
+    position = mapped_column(db.Integer, nullable=False, default=0)
+    is_listed = mapped_column(db.Boolean, nullable=False, default=True)
+    install_count = mapped_column(db.Integer, nullable=False, default=0)
+    language = mapped_column(db.String(255), nullable=False, server_default=db.text("'en-US'::character varying"))
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
     @property
     def app(self):
-        app = db.session.query(App).where(App.id == self.app_id).first()
+        app = db.session.query(App).filter(App.id == self.app_id).first()
         return app
 
 
@@ -591,19 +594,19 @@ class InstalledApp(Base):
     tenant_id = mapped_column(StringUUID, nullable=False)
     app_id = mapped_column(StringUUID, nullable=False)
     app_owner_tenant_id = mapped_column(StringUUID, nullable=False)
-    position: Mapped[int] = mapped_column(db.Integer, nullable=False, default=0)
-    is_pinned: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
+    position = mapped_column(db.Integer, nullable=False, default=0)
+    is_pinned = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
     last_used_at = mapped_column(db.DateTime, nullable=True)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
     @property
     def app(self):
-        app = db.session.query(App).where(App.id == self.app_id).first()
+        app = db.session.query(App).filter(App.id == self.app_id).first()
         return app
 
     @property
     def tenant(self):
-        tenant = db.session.query(Tenant).where(Tenant.id == self.tenant_id).first()
+        tenant = db.session.query(Tenant).filter(Tenant.id == self.tenant_id).first()
         return tenant
 
 
@@ -617,26 +620,26 @@ class Conversation(Base):
     id: Mapped[str] = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     app_id = mapped_column(StringUUID, nullable=False)
     app_model_config_id = mapped_column(StringUUID, nullable=True)
-    model_provider = mapped_column(String(255), nullable=True)
+    model_provider = mapped_column(db.String(255), nullable=True)
     override_model_configs = mapped_column(db.Text)
-    model_id = mapped_column(String(255), nullable=True)
-    mode: Mapped[str] = mapped_column(String(255))
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    model_id = mapped_column(db.String(255), nullable=True)
+    mode: Mapped[str] = mapped_column(db.String(255))
+    name = mapped_column(db.String(255), nullable=False)
     summary = mapped_column(db.Text)
     _inputs: Mapped[dict] = mapped_column("inputs", db.JSON)
     introduction = mapped_column(db.Text)
     system_instruction = mapped_column(db.Text)
-    system_instruction_tokens: Mapped[int] = mapped_column(db.Integer, nullable=False, server_default=db.text("0"))
-    status: Mapped[str] = mapped_column(String(255), nullable=False)
+    system_instruction_tokens = mapped_column(db.Integer, nullable=False, server_default=db.text("0"))
+    status = mapped_column(db.String(255), nullable=False)
 
     # The `invoke_from` records how the conversation is created.
     #
     # Its value corresponds to the members of `InvokeFrom`.
     # (api/core/app/entities/app_invoke_entities.py)
-    invoke_from = mapped_column(String(255), nullable=True)
+    invoke_from = mapped_column(db.String(255), nullable=True)
 
     # ref: ConversationSource.
-    from_source: Mapped[str] = mapped_column(String(255), nullable=False)
+    from_source = mapped_column(db.String(255), nullable=False)
     from_end_user_id = mapped_column(StringUUID)
     from_account_id = mapped_column(StringUUID)
     read_at = mapped_column(db.DateTime)
@@ -650,7 +653,7 @@ class Conversation(Base):
         "MessageAnnotation", backref="conversation", lazy="select", passive_deletes="all"
     )
 
-    is_deleted: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
+    is_deleted = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
 
     @property
     def inputs(self):
@@ -711,7 +714,7 @@ class Conversation(Base):
                     model_config["configs"] = override_model_configs
             else:
                 app_model_config = (
-                    db.session.query(AppModelConfig).where(AppModelConfig.id == self.app_model_config_id).first()
+                    db.session.query(AppModelConfig).filter(AppModelConfig.id == self.app_model_config_id).first()
                 )
                 if app_model_config:
                     model_config = app_model_config.to_dict()
@@ -734,21 +737,21 @@ class Conversation(Base):
 
     @property
     def annotated(self):
-        return db.session.query(MessageAnnotation).where(MessageAnnotation.conversation_id == self.id).count() > 0
+        return db.session.query(MessageAnnotation).filter(MessageAnnotation.conversation_id == self.id).count() > 0
 
     @property
     def annotation(self):
-        return db.session.query(MessageAnnotation).where(MessageAnnotation.conversation_id == self.id).first()
+        return db.session.query(MessageAnnotation).filter(MessageAnnotation.conversation_id == self.id).first()
 
     @property
     def message_count(self):
-        return db.session.query(Message).where(Message.conversation_id == self.id).count()
+        return db.session.query(Message).filter(Message.conversation_id == self.id).count()
 
     @property
     def user_feedback_stats(self):
         like = (
             db.session.query(MessageFeedback)
-            .where(
+            .filter(
                 MessageFeedback.conversation_id == self.id,
                 MessageFeedback.from_source == "user",
                 MessageFeedback.rating == "like",
@@ -758,7 +761,7 @@ class Conversation(Base):
 
         dislike = (
             db.session.query(MessageFeedback)
-            .where(
+            .filter(
                 MessageFeedback.conversation_id == self.id,
                 MessageFeedback.from_source == "user",
                 MessageFeedback.rating == "dislike",
@@ -772,7 +775,7 @@ class Conversation(Base):
     def admin_feedback_stats(self):
         like = (
             db.session.query(MessageFeedback)
-            .where(
+            .filter(
                 MessageFeedback.conversation_id == self.id,
                 MessageFeedback.from_source == "admin",
                 MessageFeedback.rating == "like",
@@ -782,7 +785,7 @@ class Conversation(Base):
 
         dislike = (
             db.session.query(MessageFeedback)
-            .where(
+            .filter(
                 MessageFeedback.conversation_id == self.id,
                 MessageFeedback.from_source == "admin",
                 MessageFeedback.rating == "dislike",
@@ -794,7 +797,7 @@ class Conversation(Base):
 
     @property
     def status_count(self):
-        messages = db.session.query(Message).where(Message.conversation_id == self.id).all()
+        messages = db.session.query(Message).filter(Message.conversation_id == self.id).all()
         status_counts = {
             WorkflowExecutionStatus.RUNNING: 0,
             WorkflowExecutionStatus.SUCCEEDED: 0,
@@ -821,19 +824,19 @@ class Conversation(Base):
     def first_message(self):
         return (
             db.session.query(Message)
-            .where(Message.conversation_id == self.id)
+            .filter(Message.conversation_id == self.id)
             .order_by(Message.created_at.asc())
             .first()
         )
 
     @property
     def app(self):
-        return db.session.query(App).where(App.id == self.app_id).first()
+        return db.session.query(App).filter(App.id == self.app_id).first()
 
     @property
     def from_end_user_session_id(self):
         if self.from_end_user_id:
-            end_user = db.session.query(EndUser).where(EndUser.id == self.from_end_user_id).first()
+            end_user = db.session.query(EndUser).filter(EndUser.id == self.from_end_user_id).first()
             if end_user:
                 return end_user.session_id
 
@@ -842,7 +845,7 @@ class Conversation(Base):
     @property
     def from_account_name(self):
         if self.from_account_id:
-            account = db.session.query(Account).where(Account.id == self.from_account_id).first()
+            account = db.session.query(Account).filter(Account.id == self.from_account_id).first()
             if account:
                 return account.name
 
@@ -894,8 +897,8 @@ class Message(Base):
 
     id: Mapped[str] = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     app_id = mapped_column(StringUUID, nullable=False)
-    model_provider = mapped_column(String(255), nullable=True)
-    model_id = mapped_column(String(255), nullable=True)
+    model_provider = mapped_column(db.String(255), nullable=True)
+    model_id = mapped_column(db.String(255), nullable=True)
     override_model_configs = mapped_column(db.Text)
     conversation_id = mapped_column(StringUUID, db.ForeignKey("conversations.id"), nullable=False)
     _inputs: Mapped[dict] = mapped_column("inputs", db.JSON)
@@ -911,17 +914,17 @@ class Message(Base):
     parent_message_id = mapped_column(StringUUID, nullable=True)
     provider_response_latency = mapped_column(db.Float, nullable=False, server_default=db.text("0"))
     total_price = mapped_column(db.Numeric(10, 7))
-    currency: Mapped[str] = mapped_column(String(255), nullable=False)
-    status = mapped_column(String(255), nullable=False, server_default=db.text("'normal'::character varying"))
+    currency = mapped_column(db.String(255), nullable=False)
+    status = mapped_column(db.String(255), nullable=False, server_default=db.text("'normal'::character varying"))
     error = mapped_column(db.Text)
     message_metadata = mapped_column(db.Text)
-    invoke_from: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    from_source: Mapped[str] = mapped_column(String(255), nullable=False)
+    invoke_from: Mapped[Optional[str]] = mapped_column(db.String(255), nullable=True)
+    from_source = mapped_column(db.String(255), nullable=False)
     from_end_user_id: Mapped[Optional[str]] = mapped_column(StringUUID)
     from_account_id: Mapped[Optional[str]] = mapped_column(StringUUID)
     created_at: Mapped[datetime] = mapped_column(db.DateTime, server_default=func.current_timestamp())
     updated_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
-    agent_based: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
+    agent_based = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
     workflow_run_id: Mapped[Optional[str]] = mapped_column(StringUUID)
 
     @property
@@ -1037,7 +1040,7 @@ class Message(Base):
     def user_feedback(self):
         feedback = (
             db.session.query(MessageFeedback)
-            .where(MessageFeedback.message_id == self.id, MessageFeedback.from_source == "user")
+            .filter(MessageFeedback.message_id == self.id, MessageFeedback.from_source == "user")
             .first()
         )
         return feedback
@@ -1046,30 +1049,30 @@ class Message(Base):
     def admin_feedback(self):
         feedback = (
             db.session.query(MessageFeedback)
-            .where(MessageFeedback.message_id == self.id, MessageFeedback.from_source == "admin")
+            .filter(MessageFeedback.message_id == self.id, MessageFeedback.from_source == "admin")
             .first()
         )
         return feedback
 
     @property
     def feedbacks(self):
-        feedbacks = db.session.query(MessageFeedback).where(MessageFeedback.message_id == self.id).all()
+        feedbacks = db.session.query(MessageFeedback).filter(MessageFeedback.message_id == self.id).all()
         return feedbacks
 
     @property
     def annotation(self):
-        annotation = db.session.query(MessageAnnotation).where(MessageAnnotation.message_id == self.id).first()
+        annotation = db.session.query(MessageAnnotation).filter(MessageAnnotation.message_id == self.id).first()
         return annotation
 
     @property
     def annotation_hit_history(self):
         annotation_history = (
-            db.session.query(AppAnnotationHitHistory).where(AppAnnotationHitHistory.message_id == self.id).first()
+            db.session.query(AppAnnotationHitHistory).filter(AppAnnotationHitHistory.message_id == self.id).first()
         )
         if annotation_history:
             annotation = (
                 db.session.query(MessageAnnotation)
-                .where(MessageAnnotation.id == annotation_history.annotation_id)
+                .filter(MessageAnnotation.id == annotation_history.annotation_id)
                 .first()
             )
             return annotation
@@ -1077,9 +1080,11 @@ class Message(Base):
 
     @property
     def app_model_config(self):
-        conversation = db.session.query(Conversation).where(Conversation.id == self.conversation_id).first()
+        conversation = db.session.query(Conversation).filter(Conversation.id == self.conversation_id).first()
         if conversation:
-            return db.session.query(AppModelConfig).where(AppModelConfig.id == conversation.app_model_config_id).first()
+            return (
+                db.session.query(AppModelConfig).filter(AppModelConfig.id == conversation.app_model_config_id).first()
+            )
 
         return None
 
@@ -1095,7 +1100,7 @@ class Message(Base):
     def agent_thoughts(self):
         return (
             db.session.query(MessageAgentThought)
-            .where(MessageAgentThought.message_id == self.id)
+            .filter(MessageAgentThought.message_id == self.id)
             .order_by(MessageAgentThought.position.asc())
             .all()
         )
@@ -1108,8 +1113,8 @@ class Message(Base):
     def message_files(self):
         from factories import file_factory
 
-        message_files = db.session.query(MessageFile).where(MessageFile.message_id == self.id).all()
-        current_app = db.session.query(App).where(App.id == self.app_id).first()
+        message_files = db.session.query(MessageFile).filter(MessageFile.message_id == self.id).all()
+        current_app = db.session.query(App).filter(App.id == self.app_id).first()
         if not current_app:
             raise ValueError(f"App {self.app_id} not found")
 
@@ -1173,7 +1178,7 @@ class Message(Base):
         if self.workflow_run_id:
             from .workflow import WorkflowRun
 
-            return db.session.query(WorkflowRun).where(WorkflowRun.id == self.workflow_run_id).first()
+            return db.session.query(WorkflowRun).filter(WorkflowRun.id == self.workflow_run_id).first()
 
         return None
 
@@ -1238,9 +1243,9 @@ class MessageFeedback(Base):
     app_id = mapped_column(StringUUID, nullable=False)
     conversation_id = mapped_column(StringUUID, nullable=False)
     message_id = mapped_column(StringUUID, nullable=False)
-    rating: Mapped[str] = mapped_column(String(255), nullable=False)
+    rating = mapped_column(db.String(255), nullable=False)
     content = mapped_column(db.Text)
-    from_source: Mapped[str] = mapped_column(String(255), nullable=False)
+    from_source = mapped_column(db.String(255), nullable=False)
     from_end_user_id = mapped_column(StringUUID)
     from_account_id = mapped_column(StringUUID)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
@@ -1248,7 +1253,7 @@ class MessageFeedback(Base):
 
     @property
     def from_account(self):
-        account = db.session.query(Account).where(Account.id == self.from_account_id).first()
+        account = db.session.query(Account).filter(Account.id == self.from_account_id).first()
         return account
 
     def to_dict(self):
@@ -1298,12 +1303,12 @@ class MessageFile(Base):
 
     id: Mapped[str] = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     message_id: Mapped[str] = mapped_column(StringUUID, nullable=False)
-    type: Mapped[str] = mapped_column(String(255), nullable=False)
-    transfer_method: Mapped[str] = mapped_column(String(255), nullable=False)
+    type: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    transfer_method: Mapped[str] = mapped_column(db.String(255), nullable=False)
     url: Mapped[Optional[str]] = mapped_column(db.Text, nullable=True)
-    belongs_to: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    belongs_to: Mapped[Optional[str]] = mapped_column(db.String(255), nullable=True)
     upload_file_id: Mapped[Optional[str]] = mapped_column(StringUUID, nullable=True)
-    created_by_role: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_by_role: Mapped[str] = mapped_column(db.String(255), nullable=False)
     created_by: Mapped[str] = mapped_column(StringUUID, nullable=False)
     created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
@@ -1323,19 +1328,19 @@ class MessageAnnotation(Base):
     message_id: Mapped[Optional[str]] = mapped_column(StringUUID)
     question = db.Column(db.Text, nullable=True)
     content = mapped_column(db.Text, nullable=False)
-    hit_count: Mapped[int] = mapped_column(db.Integer, nullable=False, server_default=db.text("0"))
+    hit_count = mapped_column(db.Integer, nullable=False, server_default=db.text("0"))
     account_id = mapped_column(StringUUID, nullable=False)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
     @property
     def account(self):
-        account = db.session.query(Account).where(Account.id == self.account_id).first()
+        account = db.session.query(Account).filter(Account.id == self.account_id).first()
         return account
 
     @property
     def annotation_create_account(self):
-        account = db.session.query(Account).where(Account.id == self.account_id).first()
+        account = db.session.query(Account).filter(Account.id == self.account_id).first()
         return account
 
 
@@ -1366,14 +1371,14 @@ class AppAnnotationHitHistory(Base):
         account = (
             db.session.query(Account)
             .join(MessageAnnotation, MessageAnnotation.account_id == Account.id)
-            .where(MessageAnnotation.id == self.annotation_id)
+            .filter(MessageAnnotation.id == self.annotation_id)
             .first()
         )
         return account
 
     @property
     def annotation_create_account(self):
-        account = db.session.query(Account).where(Account.id == self.account_id).first()
+        account = db.session.query(Account).filter(Account.id == self.account_id).first()
         return account
 
 
@@ -1399,7 +1404,7 @@ class AppAnnotationSetting(Base):
 
         collection_binding_detail = (
             db.session.query(DatasetCollectionBinding)
-            .where(DatasetCollectionBinding.id == self.collection_binding_id)
+            .filter(DatasetCollectionBinding.id == self.collection_binding_id)
             .first()
         )
         return collection_binding_detail
@@ -1415,10 +1420,10 @@ class OperationLog(Base):
     id = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     tenant_id = mapped_column(StringUUID, nullable=False)
     account_id = mapped_column(StringUUID, nullable=False)
-    action: Mapped[str] = mapped_column(String(255), nullable=False)
+    action = mapped_column(db.String(255), nullable=False)
     content = mapped_column(db.JSON)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
-    created_ip: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_ip = mapped_column(db.String(255), nullable=False)
     updated_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
@@ -1433,10 +1438,10 @@ class EndUser(Base, UserMixin):
     id = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     tenant_id: Mapped[str] = mapped_column(StringUUID, nullable=False)
     app_id = mapped_column(StringUUID, nullable=True)
-    type: Mapped[str] = mapped_column(String(255), nullable=False)
-    external_user_id = mapped_column(String(255), nullable=True)
-    name = mapped_column(String(255))
-    is_anonymous: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("true"))
+    type = mapped_column(db.String(255), nullable=False)
+    external_user_id = mapped_column(db.String(255), nullable=True)
+    name = mapped_column(db.String(255))
+    is_anonymous = mapped_column(db.Boolean, nullable=False, server_default=db.text("true"))
     session_id: Mapped[str] = mapped_column()
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
@@ -1452,10 +1457,10 @@ class AppMCPServer(Base):
     id = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     tenant_id = mapped_column(StringUUID, nullable=False)
     app_id = mapped_column(StringUUID, nullable=False)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
-    description: Mapped[str] = mapped_column(String(255), nullable=False)
-    server_code: Mapped[str] = mapped_column(String(255), nullable=False)
-    status = mapped_column(String(255), nullable=False, server_default=db.text("'normal'::character varying"))
+    name = mapped_column(db.String(255), nullable=False)
+    description = mapped_column(db.String(255), nullable=False)
+    server_code = mapped_column(db.String(255), nullable=False)
+    status = mapped_column(db.String(255), nullable=False, server_default=db.text("'normal'::character varying"))
     parameters = mapped_column(db.Text, nullable=False)
 
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
@@ -1465,7 +1470,7 @@ class AppMCPServer(Base):
     def generate_server_code(n):
         while True:
             result = generate_string(n)
-            while db.session.query(AppMCPServer).where(AppMCPServer.server_code == result).count() > 0:
+            while db.session.query(AppMCPServer).filter(AppMCPServer.server_code == result).count() > 0:
                 result = generate_string(n)
 
             return result
@@ -1485,28 +1490,28 @@ class Site(Base):
 
     id = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     app_id = mapped_column(StringUUID, nullable=False)
-    title: Mapped[str] = mapped_column(String(255), nullable=False)
-    icon_type = mapped_column(String(255), nullable=True)
-    icon = mapped_column(String(255))
-    icon_background = mapped_column(String(255))
+    title = mapped_column(db.String(255), nullable=False)
+    icon_type = mapped_column(db.String(255), nullable=True)
+    icon = mapped_column(db.String(255))
+    icon_background = mapped_column(db.String(255))
     description = mapped_column(db.Text)
-    default_language: Mapped[str] = mapped_column(String(255), nullable=False)
-    chat_color_theme = mapped_column(String(255))
-    chat_color_theme_inverted: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
-    copyright = mapped_column(String(255))
-    privacy_policy = mapped_column(String(255))
-    show_workflow_steps: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("true"))
-    use_icon_as_answer_icon: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
+    default_language = mapped_column(db.String(255), nullable=False)
+    chat_color_theme = mapped_column(db.String(255))
+    chat_color_theme_inverted = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
+    copyright = mapped_column(db.String(255))
+    privacy_policy = mapped_column(db.String(255))
+    show_workflow_steps = mapped_column(db.Boolean, nullable=False, server_default=db.text("true"))
+    use_icon_as_answer_icon = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
     _custom_disclaimer: Mapped[str] = mapped_column("custom_disclaimer", sa.TEXT, default="")
-    customize_domain = mapped_column(String(255))
-    customize_token_strategy: Mapped[str] = mapped_column(String(255), nullable=False)
-    prompt_public: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
-    status = mapped_column(String(255), nullable=False, server_default=db.text("'normal'::character varying"))
+    customize_domain = mapped_column(db.String(255))
+    customize_token_strategy = mapped_column(db.String(255), nullable=False)
+    prompt_public = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
+    status = mapped_column(db.String(255), nullable=False, server_default=db.text("'normal'::character varying"))
     created_by = mapped_column(StringUUID, nullable=True)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_by = mapped_column(StringUUID, nullable=True)
     updated_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
-    code = mapped_column(String(255))
+    code = mapped_column(db.String(255))
 
     @property
     def custom_disclaimer(self):
@@ -1522,7 +1527,7 @@ class Site(Base):
     def generate_code(n):
         while True:
             result = generate_string(n)
-            while db.session.query(Site).where(Site.code == result).count() > 0:
+            while db.session.query(Site).filter(Site.code == result).count() > 0:
                 result = generate_string(n)
 
             return result
@@ -1544,8 +1549,8 @@ class ApiToken(Base):
     id = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     app_id = mapped_column(StringUUID, nullable=True)
     tenant_id = mapped_column(StringUUID, nullable=True)
-    type = mapped_column(String(16), nullable=False)
-    token: Mapped[str] = mapped_column(String(255), nullable=False)
+    type = mapped_column(db.String(16), nullable=False)
+    token = mapped_column(db.String(255), nullable=False)
     last_used_at = mapped_column(db.DateTime, nullable=True)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
@@ -1553,7 +1558,7 @@ class ApiToken(Base):
     def generate_api_key(prefix, n):
         while True:
             result = prefix + generate_string(n)
-            if db.session.query(ApiToken).where(ApiToken.token == result).count() > 0:
+            if db.session.query(ApiToken).filter(ApiToken.token == result).count() > 0:
                 continue
             return result
 
@@ -1567,21 +1572,21 @@ class UploadFile(Base):
 
     id: Mapped[str] = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     tenant_id: Mapped[str] = mapped_column(StringUUID, nullable=False)
-    storage_type: Mapped[str] = mapped_column(String(255), nullable=False)
-    key: Mapped[str] = mapped_column(String(255), nullable=False)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_type: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    key: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    name: Mapped[str] = mapped_column(db.String(255), nullable=False)
     size: Mapped[int] = mapped_column(db.Integer, nullable=False)
-    extension: Mapped[str] = mapped_column(String(255), nullable=False)
-    mime_type: Mapped[str] = mapped_column(String(255), nullable=True)
+    extension: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    mime_type: Mapped[str] = mapped_column(db.String(255), nullable=True)
     created_by_role: Mapped[str] = mapped_column(
-        String(255), nullable=False, server_default=db.text("'account'::character varying")
+        db.String(255), nullable=False, server_default=db.text("'account'::character varying")
     )
     created_by: Mapped[str] = mapped_column(StringUUID, nullable=False)
     created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     used: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("false"))
     used_by: Mapped[str | None] = mapped_column(StringUUID, nullable=True)
     used_at: Mapped[datetime | None] = mapped_column(db.DateTime, nullable=True)
-    hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    hash: Mapped[str | None] = mapped_column(db.String(255), nullable=True)
     source_url: Mapped[str] = mapped_column(sa.TEXT, default="")
 
     def __init__(
@@ -1630,10 +1635,10 @@ class ApiRequest(Base):
     id = mapped_column(StringUUID, nullable=False, server_default=db.text("uuid_generate_v4()"))
     tenant_id = mapped_column(StringUUID, nullable=False)
     api_token_id = mapped_column(StringUUID, nullable=False)
-    path: Mapped[str] = mapped_column(String(255), nullable=False)
+    path = mapped_column(db.String(255), nullable=False)
     request = mapped_column(db.Text, nullable=True)
     response = mapped_column(db.Text, nullable=True)
-    ip: Mapped[str] = mapped_column(String(255), nullable=False)
+    ip = mapped_column(db.String(255), nullable=False)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
 
@@ -1646,7 +1651,7 @@ class MessageChain(Base):
 
     id = mapped_column(StringUUID, nullable=False, server_default=db.text("uuid_generate_v4()"))
     message_id = mapped_column(StringUUID, nullable=False)
-    type: Mapped[str] = mapped_column(String(255), nullable=False)
+    type = mapped_column(db.String(255), nullable=False)
     input = mapped_column(db.Text, nullable=True)
     output = mapped_column(db.Text, nullable=True)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
@@ -1663,7 +1668,7 @@ class MessageAgentThought(Base):
     id = mapped_column(StringUUID, nullable=False, server_default=db.text("uuid_generate_v4()"))
     message_id = mapped_column(StringUUID, nullable=False)
     message_chain_id = mapped_column(StringUUID, nullable=True)
-    position: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    position = mapped_column(db.Integer, nullable=False)
     thought = mapped_column(db.Text, nullable=True)
     tool = mapped_column(db.Text, nullable=True)
     tool_labels_str = mapped_column(db.Text, nullable=False, server_default=db.text("'{}'::text"))
@@ -1673,19 +1678,19 @@ class MessageAgentThought(Base):
     # plugin_id = mapped_column(StringUUID, nullable=True)  ## for future design
     tool_process_data = mapped_column(db.Text, nullable=True)
     message = mapped_column(db.Text, nullable=True)
-    message_token: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
+    message_token = mapped_column(db.Integer, nullable=True)
     message_unit_price = mapped_column(db.Numeric, nullable=True)
     message_price_unit = mapped_column(db.Numeric(10, 7), nullable=False, server_default=db.text("0.001"))
     message_files = mapped_column(db.Text, nullable=True)
     answer = db.Column(db.Text, nullable=True)
-    answer_token: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
+    answer_token = mapped_column(db.Integer, nullable=True)
     answer_unit_price = mapped_column(db.Numeric, nullable=True)
     answer_price_unit = mapped_column(db.Numeric(10, 7), nullable=False, server_default=db.text("0.001"))
-    tokens: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
+    tokens = mapped_column(db.Integer, nullable=True)
     total_price = mapped_column(db.Numeric, nullable=True)
-    currency = mapped_column(String, nullable=True)
-    latency: Mapped[Optional[float]] = mapped_column(db.Float, nullable=True)
-    created_by_role = mapped_column(String, nullable=False)
+    currency = mapped_column(db.String, nullable=True)
+    latency = mapped_column(db.Float, nullable=True)
+    created_by_role = mapped_column(db.String, nullable=False)
     created_by = mapped_column(StringUUID, nullable=False)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
 
@@ -1775,18 +1780,18 @@ class DatasetRetrieverResource(Base):
 
     id = mapped_column(StringUUID, nullable=False, server_default=db.text("uuid_generate_v4()"))
     message_id = mapped_column(StringUUID, nullable=False)
-    position: Mapped[int] = mapped_column(db.Integer, nullable=False)
+    position = mapped_column(db.Integer, nullable=False)
     dataset_id = mapped_column(StringUUID, nullable=False)
     dataset_name = mapped_column(db.Text, nullable=False)
     document_id = mapped_column(StringUUID, nullable=True)
     document_name = mapped_column(db.Text, nullable=False)
     data_source_type = mapped_column(db.Text, nullable=True)
     segment_id = mapped_column(StringUUID, nullable=True)
-    score: Mapped[Optional[float]] = mapped_column(db.Float, nullable=True)
+    score = mapped_column(db.Float, nullable=True)
     content = mapped_column(db.Text, nullable=False)
-    hit_count: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
-    word_count: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
-    segment_position: Mapped[Optional[int]] = mapped_column(db.Integer, nullable=True)
+    hit_count = mapped_column(db.Integer, nullable=True)
+    word_count = mapped_column(db.Integer, nullable=True)
+    segment_position = mapped_column(db.Integer, nullable=True)
     index_node_hash = mapped_column(db.Text, nullable=True)
     retriever_from = mapped_column(db.Text, nullable=False)
     created_by = mapped_column(StringUUID, nullable=False)
@@ -1805,8 +1810,8 @@ class Tag(Base):
 
     id = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     tenant_id = mapped_column(StringUUID, nullable=True)
-    type = mapped_column(String(16), nullable=False)
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    type = mapped_column(db.String(16), nullable=False)
+    name = mapped_column(db.String(255), nullable=False)
     created_by = mapped_column(StringUUID, nullable=False)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
@@ -1836,13 +1841,13 @@ class TraceAppConfig(Base):
 
     id = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     app_id = mapped_column(StringUUID, nullable=False)
-    tracing_provider = mapped_column(String(255), nullable=True)
+    tracing_provider = mapped_column(db.String(255), nullable=True)
     tracing_config = mapped_column(db.JSON, nullable=True)
     created_at = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_at = mapped_column(
         db.DateTime, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
     )
-    is_active: Mapped[bool] = mapped_column(db.Boolean, nullable=False, server_default=db.text("true"))
+    is_active = mapped_column(db.Boolean, nullable=False, server_default=db.text("true"))
 
     @property
     def tracing_config_dict(self):

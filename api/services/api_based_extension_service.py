@@ -73,7 +73,7 @@ class APIBasedExtensionService:
                 db.session.query(APIBasedExtension)
                 .filter_by(tenant_id=extension_data.tenant_id)
                 .filter_by(name=extension_data.name)
-                .where(APIBasedExtension.id != extension_data.id)
+                .filter(APIBasedExtension.id != extension_data.id)
                 .first()
             )
 
@@ -102,4 +102,4 @@ class APIBasedExtensionService:
             if resp.get("result") != "pong":
                 raise ValueError(resp)
         except Exception as e:
-            raise ValueError(f"connection error: {e}")
+            raise ValueError("connection error: {}".format(e))

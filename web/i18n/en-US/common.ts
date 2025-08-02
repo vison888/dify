@@ -248,7 +248,6 @@ const translation = {
       emailLabel: 'New email',
       emailPlaceholder: 'Enter a new email',
       existingEmail: 'A user with this email already exists.',
-      unAvailableEmail: 'This email is temporarily unavailable.',
       sendVerifyCode: 'Send verification code',
       continue: 'Continue',
       changeTo: 'Change to {{email}}',

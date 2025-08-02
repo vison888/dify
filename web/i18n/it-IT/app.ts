@@ -273,7 +273,6 @@ const translation = {
   noAccessPermission: 'Nessun permesso per accedere all\'app web',
   maxActiveRequestsPlaceholder: 'Inserisci 0 per illimitato',
   maxActiveRequests: 'Massimo numero di richieste concorrenti',
-  maxActiveRequestsTip: 'Numero massimo di richieste attive concorrenti per app (0 per illimitato)',
 }
 
 export default translation

@@ -125,13 +125,16 @@ class LLMGenerator:
         return questions
 
     @classmethod
-    def generate_rule_config(cls, tenant_id: str, instruction: str, model_config: dict, no_variable: bool) -> dict:
+    def generate_rule_config(
+        cls, tenant_id: str, instruction: str, model_config: dict, no_variable: bool, rule_config_max_tokens: int = 512
+    ) -> dict:
         output_parser = RuleConfigGeneratorOutputParser()
 
         error = ""
         error_step = ""
         rule_config = {"prompt": "", "variables": [], "opening_statement": "", "error": ""}
-        model_parameters = model_config.get("completion_params", {})
+        model_parameters = {"max_tokens": rule_config_max_tokens, "temperature": 0.01}
+
         if no_variable:
             prompt_template = PromptTemplateParser(WORKFLOW_RULE_CONFIG_PROMPT_GENERATE_TEMPLATE)
 
@@ -167,7 +170,7 @@ class LLMGenerator:
                 error = str(e)
                 error_step = "generate rule config"
             except Exception as e:
-                logging.exception("Failed to generate rule config, model: %s", model_config.get("name"))
+                logging.exception(f"Failed to generate rule config, model: {model_config.get('name')}")
                 rule_config["error"] = str(e)
 
             rule_config["error"] = f"Failed to {error_step}. Error: {error}" if error else ""
@@ -264,7 +267,7 @@ class LLMGenerator:
                 error_step = "generate conversation opener"
 
         except Exception as e:
-            logging.exception("Failed to generate rule config, model: %s", model_config.get("name"))
+            logging.exception(f"Failed to generate rule config, model: {model_config.get('name')}")
             rule_config["error"] = str(e)
 
         rule_config["error"] = f"Failed to {error_step}. Error: {error}" if error else ""
@@ -273,7 +276,12 @@ class LLMGenerator:
 
     @classmethod
     def generate_code(
-        cls, tenant_id: str, instruction: str, model_config: dict, code_language: str = "javascript"
+        cls,
+        tenant_id: str,
+        instruction: str,
+        model_config: dict,
+        code_language: str = "javascript",
+        max_tokens: int = 1000,
     ) -> dict:
         if code_language == "python":
             prompt_template = PromptTemplateParser(PYTHON_CODE_GENERATOR_PROMPT_TEMPLATE)
@@ -297,7 +305,8 @@ class LLMGenerator:
         )
 
         prompt_messages = [UserPromptMessage(content=prompt)]
-        model_parameters = model_config.get("completion_params", {})
+        model_parameters = {"max_tokens": max_tokens, "temperature": 0.01}
+
         try:
             response = cast(
                 LLMResult,
@@ -314,7 +323,7 @@ class LLMGenerator:
             return {"code": "", "language": code_language, "error": f"Failed to generate code. Error: {error}"}
         except Exception as e:
             logging.exception(
-                "Failed to invoke LLM model, model: %s, language: %s", model_config.get("name"), code_language
+                f"Failed to invoke LLM model, model: {model_config.get('name')}, language: {code_language}"
             )
             return {"code": "", "language": code_language, "error": f"An unexpected error occurred: {str(e)}"}
 
@@ -386,5 +395,5 @@ class LLMGenerator:
             error = str(e)
             return {"output": "", "error": f"Failed to generate JSON Schema. Error: {error}"}
         except Exception as e:
-            logging.exception("Failed to invoke LLM model, model: %s", model_config.get("name"))
+            logging.exception(f"Failed to invoke LLM model, model: {model_config.get('name')}")
             return {"output": "", "error": f"An unexpected error occurred: {str(e)}"}

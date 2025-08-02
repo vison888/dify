@@ -160,7 +160,7 @@ class ToolFileManager:
         with Session(self._engine, expire_on_commit=False) as session:
             tool_file: ToolFile | None = (
                 session.query(ToolFile)
-                .where(
+                .filter(
                     ToolFile.id == id,
                 )
                 .first()
@@ -184,7 +184,7 @@ class ToolFileManager:
         with Session(self._engine, expire_on_commit=False) as session:
             message_file: MessageFile | None = (
                 session.query(MessageFile)
-                .where(
+                .filter(
                     MessageFile.id == id,
                 )
                 .first()
@@ -204,7 +204,7 @@ class ToolFileManager:
 
             tool_file: ToolFile | None = (
                 session.query(ToolFile)
-                .where(
+                .filter(
                     ToolFile.id == tool_file_id,
                 )
                 .first()
@@ -228,7 +228,7 @@ class ToolFileManager:
         with Session(self._engine, expire_on_commit=False) as session:
             tool_file: ToolFile | None = (
                 session.query(ToolFile)
-                .where(
+                .filter(
                     ToolFile.id == tool_file_id,
                 )
                 .first()

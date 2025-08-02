@@ -124,7 +124,10 @@ const AppDetailNav = ({ title, desc, isExternal, icon, icon_background, navigati
       {
         !isMobile && (
           <div
-            className="shrink-0 px-4 py-3"
+            className={`
+              shrink-0 py-3
+              ${expand ? 'px-6' : 'px-4'}
+            `}
           >
             <div
               className='flex h-6 w-6 cursor-pointer items-center justify-center'

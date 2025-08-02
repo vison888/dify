@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from uuid import uuid4
 
 from flask_login import current_user
-from sqlalchemy import DateTime, orm
+from sqlalchemy import orm
 
 from core.file.constants import maybe_file_object
 from core.file.models import File
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from models.model import AppMode
 
 import sqlalchemy as sa
-from sqlalchemy import Index, PrimaryKeyConstraint, String, UniqueConstraint, func
+from sqlalchemy import Index, PrimaryKeyConstraint, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column
 
 from constants import DEFAULT_FILE_NUMBER_LIMITS, HIDDEN_VALUE
@@ -41,6 +41,9 @@ from .enums import CreatorUserRole, DraftVariableType
 from .types import EnumText, StringUUID
 
 _logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from models.model import AppMode
 
 
 class WorkflowType(Enum):
@@ -124,17 +127,17 @@ class Workflow(Base):
     id: Mapped[str] = mapped_column(StringUUID, server_default=db.text("uuid_generate_v4()"))
     tenant_id: Mapped[str] = mapped_column(StringUUID, nullable=False)
     app_id: Mapped[str] = mapped_column(StringUUID, nullable=False)
-    type: Mapped[str] = mapped_column(String(255), nullable=False)
-    version: Mapped[str] = mapped_column(String(255), nullable=False)
+    type: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    version: Mapped[str] = mapped_column(db.String(255), nullable=False)
     marked_name: Mapped[str] = mapped_column(default="", server_default="")
     marked_comment: Mapped[str] = mapped_column(default="", server_default="")
     graph: Mapped[str] = mapped_column(sa.Text)
     _features: Mapped[str] = mapped_column("features", sa.TEXT)
     created_by: Mapped[str] = mapped_column(StringUUID, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.current_timestamp())
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
     updated_by: Mapped[Optional[str]] = mapped_column(StringUUID)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        db.DateTime,
         nullable=False,
         default=naive_utc_now(),
         server_onupdate=func.current_timestamp(),
@@ -340,7 +343,7 @@ class Workflow(Base):
 
         return (
             db.session.query(WorkflowToolProvider)
-            .where(WorkflowToolProvider.tenant_id == self.tenant_id, WorkflowToolProvider.app_id == self.app_id)
+            .filter(WorkflowToolProvider.tenant_id == self.tenant_id, WorkflowToolProvider.app_id == self.app_id)
             .count()
             > 0
         )
@@ -500,21 +503,21 @@ class WorkflowRun(Base):
     app_id: Mapped[str] = mapped_column(StringUUID)
 
     workflow_id: Mapped[str] = mapped_column(StringUUID)
-    type: Mapped[str] = mapped_column(String(255))
-    triggered_from: Mapped[str] = mapped_column(String(255))
-    version: Mapped[str] = mapped_column(String(255))
+    type: Mapped[str] = mapped_column(db.String(255))
+    triggered_from: Mapped[str] = mapped_column(db.String(255))
+    version: Mapped[str] = mapped_column(db.String(255))
     graph: Mapped[Optional[str]] = mapped_column(db.Text)
     inputs: Mapped[Optional[str]] = mapped_column(db.Text)
-    status: Mapped[str] = mapped_column(String(255))  # running, succeeded, failed, stopped, partial-succeeded
+    status: Mapped[str] = mapped_column(db.String(255))  # running, succeeded, failed, stopped, partial-succeeded
     outputs: Mapped[Optional[str]] = mapped_column(sa.Text, default="{}")
     error: Mapped[Optional[str]] = mapped_column(db.Text)
     elapsed_time: Mapped[float] = mapped_column(db.Float, nullable=False, server_default=sa.text("0"))
     total_tokens: Mapped[int] = mapped_column(sa.BigInteger, server_default=sa.text("0"))
     total_steps: Mapped[int] = mapped_column(db.Integer, server_default=db.text("0"), nullable=True)
-    created_by_role: Mapped[str] = mapped_column(String(255))  # account, end_user
+    created_by_role: Mapped[str] = mapped_column(db.String(255))  # account, end_user
     created_by: Mapped[str] = mapped_column(StringUUID, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.current_timestamp())
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
+    finished_at: Mapped[Optional[datetime]] = mapped_column(db.DateTime)
     exceptions_count: Mapped[int] = mapped_column(db.Integer, server_default=db.text("0"), nullable=True)
 
     @property
@@ -546,12 +549,12 @@ class WorkflowRun(Base):
         from models.model import Message
 
         return (
-            db.session.query(Message).where(Message.app_id == self.app_id, Message.workflow_run_id == self.id).first()
+            db.session.query(Message).filter(Message.app_id == self.app_id, Message.workflow_run_id == self.id).first()
         )
 
     @property
     def workflow(self):
-        return db.session.query(Workflow).where(Workflow.id == self.workflow_id).first()
+        return db.session.query(Workflow).filter(Workflow.id == self.workflow_id).first()
 
     def to_dict(self):
         return {
@@ -708,25 +711,25 @@ class WorkflowNodeExecutionModel(Base):
     tenant_id: Mapped[str] = mapped_column(StringUUID)
     app_id: Mapped[str] = mapped_column(StringUUID)
     workflow_id: Mapped[str] = mapped_column(StringUUID)
-    triggered_from: Mapped[str] = mapped_column(String(255))
+    triggered_from: Mapped[str] = mapped_column(db.String(255))
     workflow_run_id: Mapped[Optional[str]] = mapped_column(StringUUID)
     index: Mapped[int] = mapped_column(db.Integer)
-    predecessor_node_id: Mapped[Optional[str]] = mapped_column(String(255))
-    node_execution_id: Mapped[Optional[str]] = mapped_column(String(255))
-    node_id: Mapped[str] = mapped_column(String(255))
-    node_type: Mapped[str] = mapped_column(String(255))
-    title: Mapped[str] = mapped_column(String(255))
+    predecessor_node_id: Mapped[Optional[str]] = mapped_column(db.String(255))
+    node_execution_id: Mapped[Optional[str]] = mapped_column(db.String(255))
+    node_id: Mapped[str] = mapped_column(db.String(255))
+    node_type: Mapped[str] = mapped_column(db.String(255))
+    title: Mapped[str] = mapped_column(db.String(255))
     inputs: Mapped[Optional[str]] = mapped_column(db.Text)
     process_data: Mapped[Optional[str]] = mapped_column(db.Text)
     outputs: Mapped[Optional[str]] = mapped_column(db.Text)
-    status: Mapped[str] = mapped_column(String(255))
+    status: Mapped[str] = mapped_column(db.String(255))
     error: Mapped[Optional[str]] = mapped_column(db.Text)
     elapsed_time: Mapped[float] = mapped_column(db.Float, server_default=db.text("0"))
     execution_metadata: Mapped[Optional[str]] = mapped_column(db.Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.current_timestamp())
-    created_by_role: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, server_default=func.current_timestamp())
+    created_by_role: Mapped[str] = mapped_column(db.String(255))
     created_by: Mapped[str] = mapped_column(StringUUID)
-    finished_at: Mapped[Optional[datetime]] = mapped_column(DateTime)
+    finished_at: Mapped[Optional[datetime]] = mapped_column(db.DateTime)
 
     @property
     def created_by_account(self):
@@ -843,10 +846,10 @@ class WorkflowAppLog(Base):
     app_id: Mapped[str] = mapped_column(StringUUID)
     workflow_id: Mapped[str] = mapped_column(StringUUID, nullable=False)
     workflow_run_id: Mapped[str] = mapped_column(StringUUID)
-    created_from: Mapped[str] = mapped_column(String(255), nullable=False)
-    created_by_role: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_from: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    created_by_role: Mapped[str] = mapped_column(db.String(255), nullable=False)
     created_by: Mapped[str] = mapped_column(StringUUID, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=func.current_timestamp())
+    created_at: Mapped[datetime] = mapped_column(db.DateTime, nullable=False, server_default=func.current_timestamp())
 
     @property
     def workflow_run(self):
@@ -873,10 +876,10 @@ class ConversationVariable(Base):
     app_id: Mapped[str] = mapped_column(StringUUID, nullable=False, index=True)
     data: Mapped[str] = mapped_column(db.Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp(), index=True
+        db.DateTime, nullable=False, server_default=func.current_timestamp(), index=True
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
+        db.DateTime, nullable=False, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
     )
 
     def __init__(self, *, id: str, app_id: str, conversation_id: str, data: str) -> None:
@@ -936,14 +939,14 @@ class WorkflowDraftVariable(Base):
     id: Mapped[str] = mapped_column(StringUUID, primary_key=True, server_default=db.text("uuid_generate_v4()"))
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        db.DateTime,
         nullable=False,
         default=_naive_utc_datetime,
         server_default=func.current_timestamp(),
     )
 
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
+        db.DateTime,
         nullable=False,
         default=_naive_utc_datetime,
         server_default=func.current_timestamp(),
@@ -958,7 +961,7 @@ class WorkflowDraftVariable(Base):
     #
     # If it's not edited after creation, its value is `None`.
     last_edited_at: Mapped[datetime | None] = mapped_column(
-        DateTime,
+        db.DateTime,
         nullable=True,
         default=None,
     )

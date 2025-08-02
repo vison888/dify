@@ -15,11 +15,7 @@ from fields.message_fields import agent_thought_fields, feedback_fields
 from fields.raws import FilesContainedField
 from libs.helper import TimestampField, uuid_value
 from models.model import App, AppMode, EndUser
-from services.errors.message import (
-    FirstMessageNotExistsError,
-    MessageNotExistsError,
-    SuggestedQuestionsAfterAnswerDisabledError,
-)
+from services.errors.message import SuggestedQuestionsAfterAnswerDisabledError
 from services.message_service import MessageService
 
 
@@ -69,7 +65,7 @@ class MessageListApi(Resource):
             )
         except services.errors.conversation.ConversationNotExistsError:
             raise NotFound("Conversation Not Exists.")
-        except FirstMessageNotExistsError:
+        except services.errors.message.FirstMessageNotExistsError:
             raise NotFound("First Message Not Exists.")
 
 
@@ -91,7 +87,7 @@ class MessageFeedbackApi(Resource):
                 rating=args.get("rating"),
                 content=args.get("content"),
             )
-        except MessageNotExistsError:
+        except services.errors.message.MessageNotExistsError:
             raise NotFound("Message Not Exists.")
 
         return {"result": "success"}
@@ -121,7 +117,7 @@ class MessageSuggestedApi(Resource):
             questions = MessageService.get_suggested_questions_after_answer(
                 app_model=app_model, user=end_user, message_id=message_id, invoke_from=InvokeFrom.SERVICE_API
             )
-        except MessageNotExistsError:
+        except services.errors.message.MessageNotExistsError:
             raise NotFound("Message Not Exists.")
         except SuggestedQuestionsAfterAnswerDisabledError:
             raise BadRequest("Suggested Questions Is Disabled.")

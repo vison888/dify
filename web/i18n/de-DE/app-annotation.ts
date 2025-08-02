@@ -17,7 +17,6 @@ const translation = {
       bulkImport: 'Massenimport',
       bulkExport: 'Massenexport',
       clearAll: 'Alle Anmerkungen löschen',
-      clearAllConfirm: 'Alle Anmerkungen löschen?',
     },
   },
   editModal: {

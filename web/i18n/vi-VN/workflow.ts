@@ -222,6 +222,7 @@ const translation = {
   tabs: {
     'tools': 'Công cụ',
     'allTool': 'Tất cả',
+    'builtInTool': 'Tích hợp sẵn',
     'customTool': 'Tùy chỉnh',
     'workflowTool': 'Quy trình làm việc',
     'question-understand': 'Hiểu câu hỏi',
@@ -496,7 +497,6 @@ const translation = {
           search: 'Tìm kiếm siêu dữ liệu',
         },
         title: 'Lọc siêu dữ liệu',
-        tip: 'Lọc siêu dữ liệu là quá trình sử dụng các thuộc tính siêu dữ liệu (chẳng hạn như thẻ, danh mục hoặc quyền truy cập) để tinh chỉnh và kiểm soát việc truy xuất thông tin liên quan trong một hệ thống.',
       },
     },
     http: {
@@ -586,6 +586,7 @@ const translation = {
         'not empty': 'không trống',
         'null': 'là null',
         'not null': 'không là null',
+        'regex match': 'Trận đấu Regex',
         'exists': 'Tồn tại',
         'not exists': 'không tồn tại',
         'not in': 'không có trong',

@@ -84,7 +84,7 @@ class WorkflowToolProviderController(ToolProviderController):
         """
         workflow: Workflow | None = (
             db.session.query(Workflow)
-            .where(Workflow.app_id == db_provider.app_id, Workflow.version == db_provider.version)
+            .filter(Workflow.app_id == db_provider.app_id, Workflow.version == db_provider.version)
             .first()
         )
 
@@ -190,7 +190,7 @@ class WorkflowToolProviderController(ToolProviderController):
 
         db_providers: WorkflowToolProvider | None = (
             db.session.query(WorkflowToolProvider)
-            .where(
+            .filter(
                 WorkflowToolProvider.tenant_id == tenant_id,
                 WorkflowToolProvider.app_id == self.provider_id,
             )

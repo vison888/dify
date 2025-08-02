@@ -26,8 +26,7 @@ export type SwitchPluginVersionProps = {
 
 export const SwitchPluginVersion: FC<SwitchPluginVersionProps> = (props) => {
   const { uniqueIdentifier, tooltip, onChange, className } = props
-
-  const [pluginId] = uniqueIdentifier?.split(':') || ['']
+  const [pluginId] = uniqueIdentifier.split(':')
   const [isShow, setIsShow] = useState(false)
   const [isShowUpdateModal, { setTrue: showUpdateModal, setFalse: hideUpdateModal }] = useBoolean(false)
   const [target, setTarget] = useState<{
@@ -61,11 +60,6 @@ export const SwitchPluginVersion: FC<SwitchPluginVersionProps> = (props) => {
       })
   }
   const { t } = useTranslation()
-
-  // Guard against null/undefined uniqueIdentifier to prevent app crash
-  if (!uniqueIdentifier || !pluginId)
-    return null
-
   return <Tooltip popupContent={!isShow && !isShowUpdateModal && tooltip} triggerMethod='hover'>
     <div className={cn('flex w-fit items-center justify-center', className)} onClick={e => e.stopPropagation()}>
       {isShowUpdateModal && pluginDetail && <PluginMutationModel

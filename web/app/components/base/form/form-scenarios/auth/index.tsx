@@ -7,7 +7,6 @@ const AuthForm = ({
   defaultValues,
   ref,
   formFromProps,
-  ...rest
 }: BaseFormProps) => {
   return (
     <BaseForm
@@ -17,7 +16,6 @@ const AuthForm = ({
       formClassName='space-y-4'
       labelClassName='h-6 flex items-center mb-1 system-sm-medium text-text-secondary'
       formFromProps={formFromProps}
-      {...rest}
     />
   )
 }

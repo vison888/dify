@@ -2,19 +2,9 @@
 
 set -e
 
-# Set UTF-8 encoding to address potential encoding issues in containerized environments
-export LANG=${LANG:-en_US.UTF-8}
-export LC_ALL=${LC_ALL:-en_US.UTF-8}
-export PYTHONIOENCODING=${PYTHONIOENCODING:-utf-8}
-
 if [[ "${MIGRATION_ENABLED}" == "true" ]]; then
   echo "Running migrations"
   flask upgrade-db
-  # Pure migration mode
-  if [[ "${MODE}" == "migration" ]]; then
-  echo "Migration completed, exiting normally"
-  exit 0
-  fi
 fi
 
 if [[ "${MODE}" == "worker" ]]; then

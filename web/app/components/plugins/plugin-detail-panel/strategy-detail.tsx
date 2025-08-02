@@ -14,7 +14,7 @@ import Divider from '@/app/components/base/divider'
 import type {
   StrategyDetail as StrategyDetailType,
 } from '@/app/components/plugins/types'
-import type { Locale } from '@/i18n-config'
+import type { Locale } from '@/i18n'
 import { useRenderI18nObject } from '@/hooks/use-i18n'
 import { API_PREFIX } from '@/config'
 import cn from '@/utils/classnames'

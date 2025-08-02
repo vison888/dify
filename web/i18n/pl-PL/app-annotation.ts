@@ -18,7 +18,6 @@ const translation = {
       bulkImport: 'Masowy import',
       bulkExport: 'Masowy eksport',
       clearAll: 'Wyczyść wszystkie adnotacje',
-      clearAllConfirm: 'Usunąć wszystkie adnotacje?',
     },
   },
   editModal: {

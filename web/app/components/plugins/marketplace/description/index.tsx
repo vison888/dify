@@ -1,7 +1,7 @@
 import {
   getLocaleOnServer,
   useTranslation as translate,
-} from '@/i18n-config/server'
+} from '@/i18n/server'
 
 type DescriptionProps = {
   locale?: string

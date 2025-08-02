@@ -8,7 +8,6 @@ import { RiAddLine } from '@remixicon/react'
 type SearchBoxProps = {
   search: string
   onSearchChange: (search: string) => void
-  wrapperClassName?: string
   inputClassName?: string
   tags: string[]
   onTagsChange: (tags: string[]) => void
@@ -22,7 +21,6 @@ type SearchBoxProps = {
 const SearchBox = ({
   search,
   onSearchChange,
-  wrapperClassName,
   inputClassName,
   tags,
   onTagsChange,
@@ -34,7 +32,7 @@ const SearchBox = ({
 }: SearchBoxProps) => {
   return (
     <div
-      className={cn('z-[11] flex items-center', wrapperClassName)}
+      className='z-[11] flex items-center'
     >
       <div className={
         cn('flex items-center',

@@ -89,7 +89,7 @@ class ApiModeration(Moderation):
     def _get_api_based_extension(tenant_id: str, api_based_extension_id: str) -> Optional[APIBasedExtension]:
         extension = (
             db.session.query(APIBasedExtension)
-            .where(APIBasedExtension.tenant_id == tenant_id, APIBasedExtension.id == api_based_extension_id)
+            .filter(APIBasedExtension.tenant_id == tenant_id, APIBasedExtension.id == api_based_extension_id)
             .first()
         )
 

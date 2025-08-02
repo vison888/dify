@@ -15,7 +15,3 @@ class ConversationCompletedError(Exception):
 
 class ConversationVariableNotExistsError(BaseServiceError):
     pass
-
-
-class ConversationVariableTypeMismatchError(BaseServiceError):
-    pass

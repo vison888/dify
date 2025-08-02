@@ -30,11 +30,11 @@ class ExternalDatasetService:
     ) -> tuple[list[ExternalKnowledgeApis], int | None]:
         query = (
             select(ExternalKnowledgeApis)
-            .where(ExternalKnowledgeApis.tenant_id == tenant_id)
+            .filter(ExternalKnowledgeApis.tenant_id == tenant_id)
             .order_by(ExternalKnowledgeApis.created_at.desc())
         )
         if search:
-            query = query.where(ExternalKnowledgeApis.name.ilike(f"%{search}%"))
+            query = query.filter(ExternalKnowledgeApis.name.ilike(f"%{search}%"))
 
         external_knowledge_apis = db.paginate(
             select=query, page=page, per_page=per_page, max_per_page=100, error_out=False
@@ -46,9 +46,9 @@ class ExternalDatasetService:
     def validate_api_list(cls, api_settings: dict):
         if not api_settings:
             raise ValueError("api list is empty")
-        if not api_settings.get("endpoint"):
+        if "endpoint" not in api_settings and not api_settings["endpoint"]:
             raise ValueError("endpoint is required")
-        if not api_settings.get("api_key"):
+        if "api_key" not in api_settings and not api_settings["api_key"]:
             raise ValueError("api_key is required")
 
     @staticmethod

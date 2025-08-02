@@ -191,7 +191,7 @@ class ProviderConfiguration(BaseModel):
 
         provider_record = (
             db.session.query(Provider)
-            .where(
+            .filter(
                 Provider.tenant_id == self.tenant_id,
                 Provider.provider_type == ProviderType.CUSTOM.value,
                 Provider.provider_name.in_(provider_names),
@@ -351,7 +351,7 @@ class ProviderConfiguration(BaseModel):
 
         provider_model_record = (
             db.session.query(ProviderModel)
-            .where(
+            .filter(
                 ProviderModel.tenant_id == self.tenant_id,
                 ProviderModel.provider_name.in_(provider_names),
                 ProviderModel.model_name == model,
@@ -481,7 +481,7 @@ class ProviderConfiguration(BaseModel):
 
         return (
             db.session.query(ProviderModelSetting)
-            .where(
+            .filter(
                 ProviderModelSetting.tenant_id == self.tenant_id,
                 ProviderModelSetting.provider_name.in_(provider_names),
                 ProviderModelSetting.model_type == model_type.to_origin_model_type(),
@@ -560,7 +560,7 @@ class ProviderConfiguration(BaseModel):
 
         return (
             db.session.query(LoadBalancingModelConfig)
-            .where(
+            .filter(
                 LoadBalancingModelConfig.tenant_id == self.tenant_id,
                 LoadBalancingModelConfig.provider_name.in_(provider_names),
                 LoadBalancingModelConfig.model_type == model_type.to_origin_model_type(),
@@ -583,7 +583,7 @@ class ProviderConfiguration(BaseModel):
 
         load_balancing_config_count = (
             db.session.query(LoadBalancingModelConfig)
-            .where(
+            .filter(
                 LoadBalancingModelConfig.tenant_id == self.tenant_id,
                 LoadBalancingModelConfig.provider_name.in_(provider_names),
                 LoadBalancingModelConfig.model_type == model_type.to_origin_model_type(),
@@ -627,7 +627,7 @@ class ProviderConfiguration(BaseModel):
 
         model_setting = (
             db.session.query(ProviderModelSetting)
-            .where(
+            .filter(
                 ProviderModelSetting.tenant_id == self.tenant_id,
                 ProviderModelSetting.provider_name.in_(provider_names),
                 ProviderModelSetting.model_type == model_type.to_origin_model_type(),
@@ -693,7 +693,7 @@ class ProviderConfiguration(BaseModel):
 
         preferred_model_provider = (
             db.session.query(TenantPreferredModelProvider)
-            .where(
+            .filter(
                 TenantPreferredModelProvider.tenant_id == self.tenant_id,
                 TenantPreferredModelProvider.provider_name.in_(provider_names),
             )
@@ -900,7 +900,7 @@ class ProviderConfiguration(BaseModel):
                                 credentials=copy_credentials,
                             )
                         except Exception as ex:
-                            logger.warning("get custom model schema failed, %s", ex)
+                            logger.warning(f"get custom model schema failed, {ex}")
                             continue
 
                         if not custom_model_schema:
@@ -1009,7 +1009,7 @@ class ProviderConfiguration(BaseModel):
                     credentials=model_configuration.credentials,
                 )
             except Exception as ex:
-                logger.warning("get custom model schema failed, %s", ex)
+                logger.warning(f"get custom model schema failed, {ex}")
                 continue
 
             if not custom_model_schema:

@@ -1,12 +1,9 @@
 import datetime
 import logging
-import tempfile
 import time
 import uuid
-from pathlib import Path
 
 import click
-import pandas as pd
 from celery import shared_task  # type: ignore
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -15,17 +12,15 @@ from core.model_manager import ModelManager
 from core.model_runtime.entities.model_entities import ModelType
 from extensions.ext_database import db
 from extensions.ext_redis import redis_client
-from extensions.ext_storage import storage
 from libs import helper
 from models.dataset import Dataset, Document, DocumentSegment
-from models.model import UploadFile
 from services.vector_service import VectorService
 
 
 @shared_task(queue="dataset")
 def batch_create_segment_to_index_task(
     job_id: str,
-    upload_file_id: str,
+    content: list,
     dataset_id: str,
     document_id: str,
     tenant_id: str,
@@ -34,18 +29,18 @@ def batch_create_segment_to_index_task(
     """
     Async batch create segment to index
     :param job_id:
-    :param upload_file_id:
+    :param content:
     :param dataset_id:
     :param document_id:
     :param tenant_id:
     :param user_id:
 
-    Usage: batch_create_segment_to_index_task.delay(job_id, upload_file_id, dataset_id, document_id, tenant_id, user_id)
+    Usage: batch_create_segment_to_index_task.delay(job_id, content, dataset_id, document_id, tenant_id, user_id)
     """
-    logging.info(click.style(f"Start batch create segment jobId: {job_id}", fg="green"))
+    logging.info(click.style("Start batch create segment jobId: {}".format(job_id), fg="green"))
     start_at = time.perf_counter()
 
-    indexing_cache_key = f"segment_batch_import_{job_id}"
+    indexing_cache_key = "segment_batch_import_{}".format(job_id)
 
     try:
         with Session(db.engine) as session:
@@ -63,29 +58,6 @@ def batch_create_segment_to_index_task(
                 or dataset_document.indexing_status != "completed"
             ):
                 raise ValueError("Document is not available.")
-
-            upload_file = session.get(UploadFile, upload_file_id)
-            if not upload_file:
-                raise ValueError("UploadFile not found.")
-
-            with tempfile.TemporaryDirectory() as temp_dir:
-                suffix = Path(upload_file.key).suffix
-                # FIXME mypy: Cannot determine type of 'tempfile._get_candidate_names' better not use it here
-                file_path = f"{temp_dir}/{next(tempfile._get_candidate_names())}{suffix}"  # type: ignore
-                storage.download(upload_file.key, file_path)
-
-                # Skip the first row
-                df = pd.read_csv(file_path)
-                content = []
-                for index, row in df.iterrows():
-                    if dataset_document.doc_form == "qa_model":
-                        data = {"content": row.iloc[0], "answer": row.iloc[1]}
-                    else:
-                        data = {"content": row.iloc[0]}
-                    content.append(data)
-                if len(content) == 0:
-                    raise ValueError("The CSV file is empty.")
-
             document_segments = []
             embedding_model = None
             if dataset.indexing_technique == "high_quality":
@@ -109,7 +81,7 @@ def batch_create_segment_to_index_task(
             segment_hash = helper.generate_text_hash(content)  # type: ignore
             max_position = (
                 db.session.query(func.max(DocumentSegment.position))
-                .where(DocumentSegment.document_id == dataset_document.id)
+                .filter(DocumentSegment.document_id == dataset_document.id)
                 .scalar()
             )
             segment_document = DocumentSegment(
@@ -134,7 +106,6 @@ def batch_create_segment_to_index_task(
             db.session.add(segment_document)
             document_segments.append(segment_document)
         # update document word count
-        assert dataset_document.word_count is not None
         dataset_document.word_count += word_count_change
         db.session.add(dataset_document)
         # add index to db
@@ -144,7 +115,7 @@ def batch_create_segment_to_index_task(
         end_at = time.perf_counter()
         logging.info(
             click.style(
-                f"Segment batch created job: {job_id} latency: {end_at - start_at}",
+                "Segment batch created job: {} latency: {}".format(job_id, end_at - start_at),
                 fg="green",
             )
         )

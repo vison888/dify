@@ -27,12 +27,9 @@ import { useInvalidateAppWorkflow, usePublishWorkflow, useResetWorkflowVersionHi
 import type { PublishWorkflowParams } from '@/types/workflow'
 import { fetchAppDetail } from '@/service/apps'
 import { useStore as useAppStore } from '@/app/components/app/store'
-import useTheme from '@/hooks/use-theme'
-import cn from '@/utils/classnames'
 
 const FeaturesTrigger = () => {
   const { t } = useTranslation()
-  const { theme } = useTheme()
   const workflowStore = useWorkflowStore()
   const appDetail = useAppStore(s => s.appDetail)
   const appID = appDetail?.id
@@ -124,13 +121,7 @@ const FeaturesTrigger = () => {
 
   return (
     <>
-      <Button
-        className={cn(
-          'text-components-button-secondary-text',
-          theme === 'dark' && 'rounded-lg border border-black/5 bg-white/10 backdrop-blur-sm',
-        )}
-        onClick={handleShowFeatures}
-      >
+      <Button className='text-components-button-secondary-text' onClick={handleShowFeatures}>
         <RiApps2AddLine className='mr-1 h-4 w-4 text-components-button-secondary-text' />
         {t('workflow.common.features')}
       </Button>

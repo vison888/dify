@@ -20,7 +20,7 @@ const InputField: FC<{
   description: string
   placeholder: string
   value?: number
-  onChange: (value: number | undefined) => void
+  onChange: (value: number) => void
   readOnly?: boolean
   min: number
   max: number
@@ -35,18 +35,8 @@ const InputField: FC<{
         type='number'
         value={value}
         onChange={(e) => {
-          const inputValue = e.target.value
-          if (inputValue === '') {
-            // When user clears the input, set to undefined to let backend use default values
-            onChange(undefined)
-          }
-          else {
-            const parsedValue = Number.parseInt(inputValue, 10)
-            if (!Number.isNaN(parsedValue)) {
-              const value = Math.max(min, Math.min(max, parsedValue))
-              onChange(value)
-            }
-          }
+          const value = Math.max(min, Math.min(max, Number.parseInt(e.target.value, 10)))
+          onChange(value)
         }}
         placeholder={placeholder}
         readOnly={readOnly}

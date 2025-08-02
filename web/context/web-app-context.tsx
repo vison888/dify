@@ -2,7 +2,6 @@
 
 import type { ChatConfig } from '@/app/components/base/chat/types'
 import Loading from '@/app/components/base/loading'
-import { checkOrSetAccessToken } from '@/app/components/share/utils'
 import { AccessMode } from '@/models/access-control'
 import type { AppData, AppMeta } from '@/models/share'
 import { useGetWebAppAccessModeByCode } from '@/service/use-share'
@@ -61,30 +60,20 @@ const WebAppStoreProvider: FC<PropsWithChildren> = ({ children }) => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const redirectUrlParam = searchParams.get('redirect_url')
-
-  // Compute shareCode directly
-  const shareCode = getShareCodeFromRedirectUrl(redirectUrlParam) || getShareCodeFromPathname(pathname)
-  updateShareCode(shareCode)
-
-  const { isFetching, data: accessModeResult } = useGetWebAppAccessModeByCode(shareCode)
-  const [isFetchingAccessToken, setIsFetchingAccessToken] = useState(false)
-
+  const [shareCode, setShareCode] = useState<string | null>(null)
   useEffect(() => {
-    if (accessModeResult?.accessMode) {
+    const shareCodeFromRedirect = getShareCodeFromRedirectUrl(redirectUrlParam)
+    const shareCodeFromPathname = getShareCodeFromPathname(pathname)
+    const newShareCode = shareCodeFromRedirect || shareCodeFromPathname
+    setShareCode(newShareCode)
+    updateShareCode(newShareCode)
+  }, [pathname, redirectUrlParam, updateShareCode])
+  const { isFetching, data: accessModeResult } = useGetWebAppAccessModeByCode(shareCode)
+  useEffect(() => {
+    if (accessModeResult?.accessMode)
       updateWebAppAccessMode(accessModeResult.accessMode)
-      if (accessModeResult.accessMode === AccessMode.PUBLIC) {
-        setIsFetchingAccessToken(true)
-        checkOrSetAccessToken(shareCode).finally(() => {
-          setIsFetchingAccessToken(false)
-        })
-      }
-      else {
-        setIsFetchingAccessToken(false)
-      }
-    }
-  }, [accessModeResult, updateWebAppAccessMode, shareCode])
-
-  if (isFetching || isFetchingAccessToken) {
+  }, [accessModeResult, updateWebAppAccessMode])
+  if (isFetching) {
     return <div className='flex h-full w-full items-center justify-center'>
       <Loading />
     </div>

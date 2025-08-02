@@ -4,7 +4,7 @@ import StrategyDetailPanel from './strategy-detail'
 import type {
   StrategyDetail,
 } from '@/app/components/plugins/types'
-import type { Locale } from '@/i18n-config'
+import type { Locale } from '@/i18n'
 import { useRenderI18nObject } from '@/hooks/use-i18n'
 import cn from '@/utils/classnames'
 

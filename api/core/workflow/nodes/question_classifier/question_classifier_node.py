@@ -385,8 +385,9 @@ class QuestionClassifierNode(BaseNode):
                 text=QUESTION_CLASSIFIER_COMPLETION_PROMPT.format(
                     histories=memory_str,
                     input_text=input_text,
-                    categories=json.dumps(categories, ensure_ascii=False),
+                    categories=json.dumps(categories),
                     classification_instructions=instruction,
+                    ensure_ascii=False,
                 )
             )
 

@@ -21,7 +21,6 @@ import {
 } from '@/app/components/base/icons/src/vender/line/mediaAndDevices'
 import { useEventEmitterContextContext } from '@/context/event-emitter'
 import { EVENT_WORKFLOW_STOP } from '@/app/components/workflow/variable-inspect/types'
-import useTheme from '@/hooks/use-theme'
 
 const RunMode = memo(() => {
   const { t } = useTranslation()
@@ -103,27 +102,21 @@ const PreviewMode = memo(() => {
 PreviewMode.displayName = 'PreviewMode'
 
 const RunAndHistory: FC = () => {
-  const { theme } = useTheme()
   const isChatMode = useIsChatMode()
   const { nodesReadOnly } = useNodesReadOnly()
 
   return (
-    <>
-      <div className={cn(
-        'flex h-8 items-center rounded-lg border-[0.5px] border-components-button-secondary-border bg-components-button-secondary-bg px-0.5 shadow-xs',
-        theme === 'dark' && 'rounded-lg border border-black/5 bg-white/10 backdrop-blur-sm',
-      )}>
-        {
-          !isChatMode && <RunMode />
-        }
-        {
-          isChatMode && <PreviewMode />
-        }
-        <div className='mx-0.5 h-3.5 w-[1px] bg-divider-regular'></div>
-        <ViewHistory />
-        <Checklist disabled={nodesReadOnly} />
-      </div>
-    </>
+    <div className='flex h-8 items-center rounded-lg border-[0.5px] border-components-button-secondary-border bg-components-button-secondary-bg px-0.5 shadow-xs'>
+      {
+        !isChatMode && <RunMode />
+      }
+      {
+        isChatMode && <PreviewMode />
+      }
+      <div className='mx-0.5 h-3.5 w-[1px] bg-divider-regular'></div>
+      <ViewHistory />
+      <Checklist disabled={nodesReadOnly} />
+    </div>
   )
 }
 

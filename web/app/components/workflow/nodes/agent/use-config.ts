@@ -151,6 +151,7 @@ const useConfig = (id: string, payload: AgentNodeType) => {
       return
     const newData = formattingLegacyData()
     setInputs(newData)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStrategy])
 
   // vars

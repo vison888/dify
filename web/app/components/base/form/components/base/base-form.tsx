@@ -2,7 +2,6 @@ import {
   memo,
   useCallback,
   useImperativeHandle,
-  useMemo,
 } from 'react'
 import type {
   AnyFieldApi,
@@ -46,18 +45,8 @@ const BaseForm = ({
   disabled,
   formFromProps,
 }: BaseFormProps) => {
-  const initialDefaultValues = useMemo(() => {
-    if (defaultValues)
-      return defaultValues
-
-    return formSchemas.reduce((acc, schema) => {
-      if (schema.default)
-        acc[schema.name] = schema.default
-      return acc
-    }, {} as Record<string, any>)
-  }, [defaultValues])
   const formFromHook = useForm({
-    defaultValues: initialDefaultValues,
+    defaultValues,
   })
   const form: any = formFromProps || formFromHook
   const { getFormValues } = useGetFormValues(form, formSchemas)

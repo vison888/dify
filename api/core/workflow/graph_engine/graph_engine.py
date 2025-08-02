@@ -238,13 +238,13 @@ class GraphEngine:
         while True:
             # max steps reached
             if self.graph_runtime_state.node_run_steps > self.max_execution_steps:
-                raise GraphRunFailedError(f"Max steps {self.max_execution_steps} reached.")
+                raise GraphRunFailedError("Max steps {} reached.".format(self.max_execution_steps))
 
             # or max execution time reached
             if self._is_timed_out(
                 start_at=self.graph_runtime_state.start_at, max_execution_time=self.max_execution_time
             ):
-                raise GraphRunFailedError(f"Max execution time {self.max_execution_time}s reached.")
+                raise GraphRunFailedError("Max execution time {}s reached.".format(self.max_execution_time))
 
             # init route node state
             route_node_state = self.graph_runtime_state.node_run_state.create_node_state(node_id=next_node_id)
@@ -377,7 +377,7 @@ class GraphEngine:
 
                         edge = cast(GraphEdge, sub_edge_mappings[0])
                         if edge.run_condition is None:
-                            logger.warning("Edge %s run condition is None", edge.target_node_id)
+                            logger.warning(f"Edge {edge.target_node_id} run condition is None")
                             continue
 
                         result = ConditionManager.get_condition_handler(
@@ -848,7 +848,7 @@ class GraphEngine:
                 )
                 return
             except Exception as e:
-                logger.exception("Node %s run failed", node.title)
+                logger.exception(f"Node {node.title} run failed")
                 raise e
 
     def _append_variables_recursively(self, node_id: str, variable_key_list: list[str], variable_value: VariableValue):

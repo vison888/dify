@@ -47,22 +47,7 @@ const ChatWrapper = (
   const startVariables = startNode?.data.variables
   const appDetail = useAppStore(s => s.appDetail)
   const workflowStore = useWorkflowStore()
-  const { inputs, setInputs } = useStore(s => ({
-    inputs: s.inputs,
-    setInputs: s.setInputs,
-  }))
-
-  const initialInputs = useMemo(() => {
-    const initInputs: Record<string, any> = {}
-    if (startVariables) {
-      startVariables.forEach((variable) => {
-        if (variable.default)
-          initInputs[variable.variable] = variable.default
-      })
-    }
-    return initInputs
-  }, [startVariables])
-
+  const inputs = useStore(s => s.inputs)
   const features = useFeatures(s => s.features)
   const config = useMemo(() => {
     return {
@@ -97,11 +82,6 @@ const ChatWrapper = (
     taskId => stopChatMessageResponding(appDetail!.id, taskId),
   )
 
-  const handleRestartChat = useCallback(() => {
-    handleRestart()
-    setInputs(initialInputs)
-  }, [handleRestart, setInputs, initialInputs])
-
   const doSend: OnSend = useCallback((message, files, isRegenerate = false, parentAnswer: ChatItem | null = null) => {
     handleSend(
       {
@@ -135,18 +115,9 @@ const ChatWrapper = (
 
   useImperativeHandle(ref, () => {
     return {
-      handleRestart: handleRestartChat,
+      handleRestart,
     }
-  }, [handleRestartChat])
-
-  useEffect(() => {
-    if (Object.keys(initialInputs).length > 0) {
-      setInputs({
-        ...initialInputs,
-        ...inputs,
-      })
-    }
-  }, [initialInputs])
+  }, [handleRestart])
 
   useEffect(() => {
     if (isResponding)

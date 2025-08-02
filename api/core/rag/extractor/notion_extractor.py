@@ -1,6 +1,5 @@
 import json
 import logging
-import operator
 from typing import Any, Optional, cast
 
 import requests
@@ -131,15 +130,13 @@ class NotionExtractor(BaseExtractor):
                     data[property_name] = value
                 row_dict = {k: v for k, v in data.items() if v}
                 row_content = ""
-                for key, value in sorted(row_dict.items(), key=operator.itemgetter(0)):
+                for key, value in row_dict.items():
                     if isinstance(value, dict):
                         value_dict = {k: v for k, v in value.items() if v}
                         value_content = "".join(f"{k}:{v} " for k, v in value_dict.items())
                         row_content = row_content + f"{key}:{value_content}\n"
                     else:
                         row_content = row_content + f"{key}:{value}\n"
-                if "url" in result:
-                    row_content = row_content + f"Row Page URL:{result.get('url', '')}\n"
                 database_content.append(row_content)
 
             has_more = response_data.get("has_more", False)
@@ -369,7 +366,7 @@ class NotionExtractor(BaseExtractor):
     def _get_access_token(cls, tenant_id: str, notion_workspace_id: str) -> str:
         data_source_binding = (
             db.session.query(DataSourceOauthBinding)
-            .where(
+            .filter(
                 db.and_(
                     DataSourceOauthBinding.tenant_id == tenant_id,
                     DataSourceOauthBinding.provider == "notion",

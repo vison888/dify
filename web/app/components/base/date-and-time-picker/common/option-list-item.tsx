@@ -18,6 +18,7 @@ const OptionListItem: FC<OptionListItemProps> = ({
   useEffect(() => {
     if (isSelected && !noAutoScroll)
       listItemRef.current?.scrollIntoView({ behavior: 'instant' })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

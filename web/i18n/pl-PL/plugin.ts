@@ -257,7 +257,6 @@ const translation = {
       fixOnly: {
         selectedDescription: 'Automatyczna aktualizacja tylko dla wersji poprawek',
         name: 'Napraw tylko',
-        description: 'Automatyczna aktualizacja tylko dla wersji łatkowych (np. 1.0.1 → 1.0.2). Zmiany w wersjach mniejszych nie będą wywoływać aktualizacji.',
       },
       latest: {
         name: 'Najświeższy',
