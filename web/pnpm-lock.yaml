@@ -353,6 +353,9 @@ importers:
       sortablejs:
         specifier: ^1.15.0
         version: 1.15.6
+      styled-jsx:
+        specifier: ^5.1.7
+        version: 5.1.7(@babel/core@7.28.0)(react@19.1.0)
       swr:
         specifier: ^2.3.0
         version: 2.3.4(react@19.1.0)

@@ -66,7 +66,7 @@ const nextConfig = {
       },
     ]
   },
-  output: 'standalone',
+  // output: 'standalone', // Temporarily disabled due to Windows symlink issues
 }
 
 module.exports = withBundleAnalyzer(withMDX(nextConfig))

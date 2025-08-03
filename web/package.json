@@ -142,6 +142,7 @@
     "sharp": "^0.33.2",
     "shave": "^5.0.4",
     "sortablejs": "^1.15.0",
+    "styled-jsx": "^5.1.7",
     "swr": "^2.3.0",
     "tailwind-merge": "^2.5.4",
     "tldts": "^7.0.9",
