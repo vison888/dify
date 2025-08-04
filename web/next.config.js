@@ -28,6 +28,24 @@ const nextConfig = {
   assetPrefix,
   webpack: (config, { dev, isServer }) => {
     config.plugins.push(codeInspectorPlugin({ bundler: 'webpack' }))
+    
+    // 优化开发构建速度
+    if (dev) {
+      config.optimization = {
+        ...config.optimization,
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false,
+      }
+      // 增加并行处理
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
+        },
+      }
+    }
+    
     return config
   },
   productionBrowserSourceMaps: false, // enable browser source map generation during the production build
@@ -44,6 +62,7 @@ const nextConfig = {
     })),
   },
   experimental: {
+    // 保留空的实验性配置备用
   },
   // fix all before production. Now it slow the develop speed.
   eslint: {

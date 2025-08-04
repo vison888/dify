@@ -68,6 +68,25 @@ from models.workflow import Workflow
 
 
 class WorkflowBasedAppRunner:
+    """
+    基于工作流的应用运行器基类
+    
+    这是所有基于工作流的应用运行器的基类，提供了工作流执行的通用功能和基础设施。
+    主要负责工作流图的初始化、事件处理、节点执行管理等核心功能。
+    
+    主要功能：
+    1. 工作流图的初始化和验证
+    2. 单次迭代和单次循环的执行管理
+    3. 工作流事件处理和分发
+    4. 变量池和图运行时状态管理
+    5. 节点执行状态跟踪和错误处理
+    
+    设计模式：
+    - 模板方法模式：定义工作流执行的通用流程
+    - 观察者模式：处理工作流执行过程中的各种事件
+    - 策略模式：支持不同类型的变量加载策略
+    """
+    
     def __init__(
         self,
         *,
@@ -75,25 +94,50 @@ class WorkflowBasedAppRunner:
         variable_loader: VariableLoader = DUMMY_VARIABLE_LOADER,
         app_id: str,
     ) -> None:
-        self._queue_manager = queue_manager
-        self._variable_loader = variable_loader
-        self._app_id = app_id
+        """
+        初始化基于工作流的应用运行器
+        
+        Args:
+            queue_manager: 应用队列管理器，用于事件通信
+            variable_loader: 变量加载器，用于加载运行时变量，默认为空实现
+            app_id: 应用ID，用于标识当前运行的应用
+        """
+        self._queue_manager = queue_manager       # 队列管理器
+        self._variable_loader = variable_loader   # 变量加载器
+        self._app_id = app_id                     # 应用ID
 
     def _init_graph(self, graph_config: Mapping[str, Any]) -> Graph:
         """
-        Init graph
+        初始化工作流图
+        
+        根据工作流图配置创建Graph对象。这个方法负责验证图配置的有效性，
+        并调用Graph.init方法完成实际的图初始化工作。
+        
+        Args:
+            graph_config: 工作流图配置，必须包含nodes和edges字段
+            
+        Returns:
+            Graph: 初始化完成的工作流图对象
+            
+        Raises:
+            ValueError: 当图配置不正确时（缺少必要字段、类型错误等）
         """
+        # 验证图配置的基本结构
         if "nodes" not in graph_config or "edges" not in graph_config:
             raise ValueError("nodes or edges not found in workflow graph")
 
+        # 验证节点配置是否为列表
         if not isinstance(graph_config.get("nodes"), list):
             raise ValueError("nodes in workflow graph must be a list")
 
+        # 验证边配置是否为列表
         if not isinstance(graph_config.get("edges"), list):
             raise ValueError("edges in workflow graph must be a list")
-        # init graph
+            
+        # 初始化图对象，委托给Graph类处理具体逻辑
         graph = Graph.init(graph_config=graph_config)
 
+        # 验证图对象是否创建成功
         if not graph:
             raise ValueError("graph not found in workflow")
 
@@ -106,15 +150,33 @@ class WorkflowBasedAppRunner:
         user_inputs: dict,
     ) -> tuple[Graph, VariablePool]:
         """
-        Get variable pool of single iteration
+        获取单次迭代的图和变量池
+        
+        为单次迭代执行创建专门的图和变量池。这个方法会：
+        1. 过滤出迭代相关的节点和边
+        2. 创建专用的子图
+        3. 初始化迭代专用的变量池
+        4. 加载迭代节点的变量
+        
+        Args:
+            workflow: 工作流对象
+            node_id: 迭代节点ID
+            user_inputs: 用户输入数据
+            
+        Returns:
+            tuple[Graph, VariablePool]: 图对象和变量池的元组
+            
+        Raises:
+            ValueError: 当工作流图配置有误或节点不存在时
         """
-        # fetch workflow graph
+        # 第一步：获取工作流图配置
         graph_config = workflow.graph_dict
         if not graph_config:
             raise ValueError("workflow graph not found")
 
         graph_config = cast(dict[str, Any], graph_config)
 
+        # 验证图配置结构
         if "nodes" not in graph_config or "edges" not in graph_config:
             raise ValueError("nodes or edges not found in workflow graph")
 
@@ -124,7 +186,8 @@ class WorkflowBasedAppRunner:
         if not isinstance(graph_config.get("edges"), list):
             raise ValueError("edges in workflow graph must be a list")
 
-        # filter nodes only in iteration
+        # 第二步：过滤迭代相关的节点
+        # 包括迭代节点本身和所有属于该迭代的子节点
         node_configs = [
             node
             for node in graph_config.get("nodes", [])
@@ -133,9 +196,11 @@ class WorkflowBasedAppRunner:
 
         graph_config["nodes"] = node_configs
 
+        # 获取所有迭代相关节点的ID列表
         node_ids = [node.get("id") for node in node_configs]
 
-        # filter edges only in iteration
+        # 第三步：过滤迭代相关的边
+        # 只保留连接迭代内部节点的边
         edge_configs = [
             edge
             for edge in graph_config.get("edges", [])
@@ -145,13 +210,14 @@ class WorkflowBasedAppRunner:
 
         graph_config["edges"] = edge_configs
 
-        # init graph
+        # 第四步：初始化子图
+        # 指定root_node_id为迭代节点ID
         graph = Graph.init(graph_config=graph_config, root_node_id=node_id)
 
         if not graph:
             raise ValueError("graph not found in workflow")
 
-        # fetch node config from node id
+        # 第五步：获取迭代节点配置
         iteration_node_config = None
         for node in node_configs:
             if node.get("id") == node_id:
@@ -161,12 +227,13 @@ class WorkflowBasedAppRunner:
         if not iteration_node_config:
             raise ValueError("iteration node id not found in workflow graph")
 
-        # Get node class
+        # 第六步：获取节点类信息
         node_type = NodeType(iteration_node_config.get("data", {}).get("type"))
         node_version = iteration_node_config.get("data", {}).get("version", "1")
         node_cls = NODE_TYPE_CLASSES_MAPPING[node_type][node_version]
 
-        # init variable pool
+        # 第七步：初始化变量池
+        # 为单次迭代创建空的变量池
         variable_pool = VariablePool(
             system_variables=SystemVariable.empty(),
             user_inputs={},

@@ -353,37 +353,68 @@ class WorkflowDraftRunLoopNodeApi(Resource):
 
 
 class DraftWorkflowRunApi(Resource):
-    @setup_required
-    @login_required
-    @account_initialization_required
-    @get_app_model(mode=[AppMode.WORKFLOW])
+    """
+    工作流草稿运行API
+    
+    负责处理工作流调试运行请求，这是工作流执行的主要入口点。
+    支持流式响应，实时返回工作流执行结果。
+    """
+    
+    @setup_required                     # 确保系统已完成初始化设置
+    @login_required                     # 确保用户已登录
+    @account_initialization_required    # 确保账户已完成初始化
+    @get_app_model(mode=[AppMode.WORKFLOW])  # 获取并验证工作流应用模型
     def post(self, app_model: App):
         """
-        Run draft workflow
+        运行草稿工作流
+        
+        这是工作流执行的主要入口点，处理来自前端调试器的工作流运行请求。
+        
+        Args:
+            app_model: 工作流应用模型，由装饰器自动注入
+            
+        Returns:
+            流式响应生成器或错误信息
+            
+        Raises:
+            Forbidden: 当用户权限不足时
+            InvokeRateLimitHttpError: 当触发调用频率限制时
         """
-        # The role of the current user in the ta table must be admin, owner, or editor
+        # 第一步：权限验证
+        # 确保当前用户具有编辑权限（admin/owner/editor）
         if not current_user.is_editor:
             raise Forbidden()
 
+        # 确保当前用户是Account类型（不是EndUser）
         if not isinstance(current_user, Account):
             raise Forbidden()
 
+        # 第二步：请求参数解析
+        # 创建请求参数解析器，用于验证和提取用户输入
         parser = reqparse.RequestParser()
+        # inputs: 必需参数，包含工作流的输入变量
         parser.add_argument("inputs", type=dict, required=True, nullable=False, location="json")
+        # files: 可选参数，包含上传的文件列表
         parser.add_argument("files", type=list, required=False, location="json")
         args = parser.parse_args()
 
         try:
+            # 第三步：调用应用生成服务
+            # 这是工作流执行的核心入口，将请求转交给应用生成服务处理
             response = AppGenerateService.generate(
-                app_model=app_model,
-                user=current_user,
-                args=args,
-                invoke_from=InvokeFrom.DEBUGGER,
-                streaming=True,
+                app_model=app_model,                # 工作流应用模型
+                user=current_user,                  # 当前用户
+                args=args,                          # 解析后的参数
+                invoke_from=InvokeFrom.DEBUGGER,   # 调用来源：调试器
+                streaming=True,                     # 启用流式响应
             )
 
+            # 第四步：响应转换
+            # 将生成器响应转换为HTTP流式响应格式
             return helper.compact_generate_response(response)
+            
         except InvokeRateLimitError as ex:
+            # 处理调用频率限制异常，转换为HTTP异常
             raise InvokeRateLimitHttpError(ex.description)
 
 

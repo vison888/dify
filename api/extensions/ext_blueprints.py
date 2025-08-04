@@ -17,12 +17,12 @@ def init_app(app: DifyApp):
     from flask_cors import CORS  # type: ignore
 
     # 导入各个模块的蓝图
-    from controllers.console import bp as console_app_bp      # 控制台API
-    from controllers.files import bp as files_bp              # 文件处理API
-    from controllers.inner_api import bp as inner_api_bp      # 内部API
-    from controllers.mcp import bp as mcp_bp                  # MCP协议API
+    from controllers.console import bp as console_app_bp  # 控制台API
+    from controllers.files import bp as files_bp  # 文件处理API
+    from controllers.inner_api import bp as inner_api_bp  # 内部API
+    from controllers.mcp import bp as mcp_bp  # MCP协议API
     from controllers.service_api import bp as service_api_bp  # 服务API
-    from controllers.web import bp as web_bp                  # Web API
+    from controllers.web import bp as web_bp  # Web API
 
     # 配置服务API蓝图的CORS
     # 允许跨域请求，支持常用的HTTP方法和自定义头部

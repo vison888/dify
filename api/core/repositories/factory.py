@@ -31,10 +31,22 @@ class RepositoryImportError(Exception):
 
 class DifyCoreRepositoryFactory:
     """
-    Factory for creating repository instances based on configuration.
-
-    This factory supports Django-like settings where repository implementations
-    are specified as module paths (e.g., 'module.submodule.ClassName').
+    Dify核心仓库工厂
+    
+    负责根据配置动态创建仓库实例的工厂类。采用Django风格的配置系统，
+    允许通过模块路径字符串指定仓库实现（例如：'module.submodule.ClassName'）。
+    
+    主要特性：
+    1. 动态类导入和实例化
+    2. 接口一致性验证
+    3. 构造函数签名验证
+    4. 配置驱动的实现切换
+    
+    设计优势：
+    - 支持不同环境使用不同的仓库实现
+    - 便于单元测试时注入Mock实现
+    - 支持插件化的仓库扩展
+    - 遵循依赖注入原则
     """
 
     @staticmethod
@@ -138,30 +150,44 @@ class DifyCoreRepositoryFactory:
         triggered_from: WorkflowRunTriggeredFrom,
     ) -> WorkflowExecutionRepository:
         """
-        Create a WorkflowExecutionRepository instance based on configuration.
-
+        创建工作流执行仓库实例
+        
+        根据配置文件中指定的实现类路径，动态创建WorkflowExecutionRepository实例。
+        这个仓库负责管理工作流执行的生命周期，包括：
+        1. 工作流执行记录的创建和更新
+        2. 执行状态的持久化
+        3. 执行结果的存储
+        4. 执行历史的查询
+        
         Args:
-            session_factory: SQLAlchemy sessionmaker or engine
-            user: Account or EndUser object
-            app_id: Application ID
-            triggered_from: Source of the execution trigger
-
+            session_factory: SQLAlchemy会话工厂或引擎，用于数据库操作
+            user: 执行用户，可以是Account或EndUser
+            app_id: 应用ID，标识具体的应用实例
+            triggered_from: 触发来源，区分不同的执行场景
+            
         Returns:
-            Configured WorkflowExecutionRepository instance
-
+            配置好的WorkflowExecutionRepository实例
+            
         Raises:
-            RepositoryImportError: If the configured repository cannot be created
+            RepositoryImportError: 当无法创建配置的仓库时
         """
+        # 从配置中获取仓库实现类路径
         class_path = dify_config.CORE_WORKFLOW_EXECUTION_REPOSITORY
         logger.debug(f"Creating WorkflowExecutionRepository from: {class_path}")
 
         try:
+            # 第一步：动态导入仓库类
             repository_class = cls._import_class(class_path)
+            
+            # 第二步：验证接口一致性
             cls._validate_repository_interface(repository_class, WorkflowExecutionRepository)
+            
+            # 第三步：验证构造函数签名
             cls._validate_constructor_signature(
                 repository_class, ["session_factory", "user", "app_id", "triggered_from"]
             )
 
+            # 第四步：创建并返回仓库实例
             return repository_class(  # type: ignore[no-any-return]
                 session_factory=session_factory,
                 user=user,
@@ -169,7 +195,7 @@ class DifyCoreRepositoryFactory:
                 triggered_from=triggered_from,
             )
         except RepositoryImportError:
-            # Re-raise our custom errors as-is
+            # 重新抛出我们的自定义错误
             raise
         except Exception as e:
             logger.exception("Failed to create WorkflowExecutionRepository")

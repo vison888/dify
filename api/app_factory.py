@@ -68,28 +68,28 @@ def initialize_extensions(app: DifyApp):
     """
     # 导入所有扩展模块
     from extensions import (
-        ext_app_metrics,      # 应用指标监控
-        ext_blueprints,       # 蓝图注册
-        ext_celery,          # Celery后台任务
+        ext_app_metrics,  # 应用指标监控
+        ext_blueprints,  # 蓝图注册
+        ext_celery,  # Celery后台任务
         ext_code_based_extension,  # 代码扩展系统
-        ext_commands,        # CLI命令
-        ext_compress,        # 响应压缩
-        ext_database,        # 数据库连接
+        ext_commands,  # CLI命令
+        ext_compress,  # 响应压缩
+        ext_database,  # 数据库连接
         ext_hosting_provider,  # 托管提供商配置
         ext_import_modules,  # 模块导入
-        ext_logging,         # 日志系统
-        ext_login,          # 用户认证
-        ext_mail,           # 邮件服务
-        ext_migrate,        # 数据库迁移
-        ext_otel,           # OpenTelemetry监控
-        ext_proxy_fix,      # 代理修复
-        ext_redis,          # Redis缓存
+        ext_logging,  # 日志系统
+        ext_login,  # 用户认证
+        ext_mail,  # 邮件服务
+        ext_migrate,  # 数据库迁移
+        ext_otel,  # OpenTelemetry监控
+        ext_proxy_fix,  # 代理修复
+        ext_redis,  # Redis缓存
         ext_request_logging,  # 请求日志
-        ext_sentry,         # 错误监控
+        ext_sentry,  # 错误监控
         ext_set_secretkey,  # 密钥设置
-        ext_storage,        # 文件存储
-        ext_timezone,       # 时区设置
-        ext_warnings,       # 警告处理
+        ext_storage,  # 文件存储
+        ext_timezone,  # 时区设置
+        ext_warnings,  # 警告处理
     )
 
     # 定义扩展初始化顺序（考虑依赖关系）

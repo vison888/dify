@@ -21,6 +21,18 @@ if TYPE_CHECKING:
 
 
 class BaseAppGenerator:
+    """
+    基础应用生成器
+    
+    为所有类型的应用生成器提供通用功能，包括：
+    1. 用户输入验证和处理
+    2. 文件类型转换
+    3. 变量验证和清理
+    4. 草稿变量保存工厂管理
+    
+    这是一个抽象基类，定义了应用生成的通用接口和实现。
+    """
+    
     def _prepare_user_inputs(
         self,
         *,
@@ -29,16 +41,42 @@ class BaseAppGenerator:
         tenant_id: str,
         strict_type_validation: bool = False,
     ) -> Mapping[str, Any]:
+        """
+        准备和验证用户输入
+        
+        这个方法是所有应用生成器的核心输入处理逻辑，负责：
+        1. 根据变量配置验证用户输入
+        2. 处理必填字段、默认值和选项值
+        3. 将文件映射转换为File对象
+        4. 清理和标准化输入值
+        
+        Args:
+            user_inputs: 原始用户输入映射
+            variables: 变量实体序列，定义了输入的结构和约束
+            tenant_id: 租户ID，用于文件处理
+            strict_type_validation: 是否启用严格类型验证
+            
+        Returns:
+            处理后的用户输入映射，包含验证过的值和转换后的文件对象
+            
+        Raises:
+            ValueError: 当输入验证失败或类型不匹配时
+        """
         user_inputs = user_inputs or {}
-        # Filter input variables from form configuration, handle required fields, default values, and option values
+        
+        # 第一步：根据表单配置过滤输入变量，处理必填字段、默认值和选项值
         user_inputs = {
             var.variable: self._validate_inputs(value=user_inputs.get(var.variable), variable_entity=var)
             for var in variables
         }
+        
+        # 第二步：清理输入值（移除空字符等）
         user_inputs = {k: self._sanitize_value(v) for k, v in user_inputs.items()}
-        # Convert files in inputs to File
+        
+        # 第三步：文件处理 - 将输入中的文件转换为File对象
         entity_dictionary = {item.variable: item for item in variables}
-        # Convert single file to File
+        
+        # 转换单个文件为File对象
         files_inputs = {
             k: file_factory.build_from_mapping(
                 mapping=v,
@@ -53,7 +91,8 @@ class BaseAppGenerator:
             for k, v in user_inputs.items()
             if isinstance(v, dict) and entity_dictionary[k].type == VariableEntityType.FILE
         }
-        # Convert list of files to File
+        
+        # 转换文件列表为File对象列表
         file_list_inputs = {
             k: file_factory.build_from_mappings(
                 mappings=v,
@@ -66,14 +105,15 @@ class BaseAppGenerator:
             )
             for k, v in user_inputs.items()
             if isinstance(v, list)
-            # Ensure skip List<File>
+            # 确保跳过List<File>类型
             and all(isinstance(item, dict) for item in v)
             and entity_dictionary[k].type == VariableEntityType.FILE_LIST
         }
-        # Merge all inputs
+        
+        # 第四步：合并所有输入
         user_inputs = {**user_inputs, **files_inputs, **file_list_inputs}
 
-        # Check if all files are converted to File
+        # 第五步：验证所有文件都已正确转换为File对象
         if any(filter(lambda v: isinstance(v, dict), user_inputs.values())):
             raise ValueError("Invalid input type")
         if any(

@@ -14,27 +14,36 @@ from core.ops.ops_trace_manager import TraceQueueManager
 
 class InvokeFrom(Enum):
     """
-    Invoke From.
+    调用来源枚举
+    
+    定义了应用调用的不同来源，用于权限控制和行为差异化。
+    不同的调用来源会影响：
+    1. 权限验证策略
+    2. 限流策略
+    3. 数据持久化行为
+    4. 错误处理方式
     """
 
-    # SERVICE_API indicates that this invocation is from an API call to Dify app.
+    # SERVICE_API 表示从服务API调用Dify应用
+    # 这是外部系统集成的主要方式，需要API密钥认证
     #
-    # Description of service api in Dify docs:
+    # Dify文档中的服务API说明：
     # https://docs.dify.ai/en/guides/application-publishing/developing-with-apis
     SERVICE_API = "service-api"
 
-    # WEB_APP indicates that this invocation is from
-    # the web app of the workflow (or chatflow).
+    # WEB_APP 表示从工作流（或聊天流）的Web应用调用
+    # 这是最终用户使用应用的主要方式
     #
-    # Description of web app in Dify docs:
+    # Dify文档中的Web应用说明：
     # https://docs.dify.ai/en/guides/application-publishing/launch-your-webapp-quickly/README
     WEB_APP = "web-app"
 
-    # EXPLORE indicates that this invocation is from
-    # the workflow (or chatflow) explore page.
+    # EXPLORE 表示从工作流（或聊天流）的探索页面调用
+    # 用于用户在发布前体验和测试应用
     EXPLORE = "explore"
-    # DEBUGGER indicates that this invocation is from
-    # the workflow (or chatflow) edit page.
+    
+    # DEBUGGER 表示从工作流（或聊天流）的编辑页面调用
+    # 用于开发者调试和测试工作流逻辑
     DEBUGGER = "debugger"
 
     @classmethod
@@ -214,29 +223,54 @@ class AdvancedChatAppGenerateEntity(ConversationAppGenerateEntity):
 
 class WorkflowAppGenerateEntity(AppGenerateEntity):
     """
-    Workflow Application Generate Entity.
+    工作流应用生成实体
+    
+    这是工作流执行过程中的核心数据结构，包含了执行工作流所需的所有信息。
+    继承自AppGenerateEntity，增加了工作流特有的字段：
+    1. 工作流执行ID
+    2. 单次迭代运行配置
+    3. 单次循环运行配置
+    
+    主要用途：
+    - 在工作流执行的各个阶段传递执行上下文
+    - 作为工作流生成器和处理管道之间的数据载体
+    - 提供调试和监控所需的执行信息
     """
 
-    # app config
+    # 应用配置，包含工作流的UI配置和变量定义
     app_config: WorkflowUIBasedAppConfig
+    
+    # 工作流执行ID，用于标识和跟踪具体的工作流执行实例
     workflow_execution_id: str
 
     class SingleIterationRunEntity(BaseModel):
         """
-        Single Iteration Run Entity.
+        单次迭代运行实体
+        
+        用于调试模式下的单节点迭代执行，允许开发者：
+        - 测试特定迭代节点的行为
+        - 验证迭代逻辑的正确性
+        - 调试复杂的循环处理
         """
 
-        node_id: str
-        inputs: dict
+        node_id: str    # 要执行的迭代节点ID
+        inputs: dict    # 传入迭代节点的输入数据
 
+    # 单次迭代运行配置，仅在调试单个迭代节点时使用
     single_iteration_run: Optional[SingleIterationRunEntity] = None
 
     class SingleLoopRunEntity(BaseModel):
         """
-        Single Loop Run Entity.
+        单次循环运行实体
+        
+        用于调试模式下的单节点循环执行，允许开发者：
+        - 测试特定循环节点的行为
+        - 验证循环条件和退出逻辑
+        - 调试循环体内的处理逻辑
         """
 
-        node_id: str
-        inputs: dict
+        node_id: str    # 要执行的循环节点ID
+        inputs: dict    # 传入循环节点的输入数据
 
+    # 单次循环运行配置，仅在调试单个循环节点时使用
     single_loop_run: Optional[SingleLoopRunEntity] = None
